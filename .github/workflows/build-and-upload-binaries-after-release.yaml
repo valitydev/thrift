@@ -1,0 +1,53 @@
+name: Build and upload binaries after release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    name: Build and upload for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: thrift
+            asset-name: thrift-linux-amd64
+            install-deps: sudo apt install -yq automake bison
+            host: amd64-linux
+          - os: macos-latest
+            artifact-name: thrift
+            asset-name: thrift-macos-aarch64
+            install-deps: brew install automake bison && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
+            host: aarch64-apple-darwin
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: ${{ matrix.install-deps }}
+      - name: Pre-configure
+        run: |
+         ./bootstrap.sh && \
+         ./configure \
+         --host=${{ matrix.host }} \
+         --disable-debug \
+         --disable-tests \
+         --without-java \
+         --without-erlang \
+         --without-python \
+         --without-py3 \
+         --without-php \
+         --without-perl \
+         --without-ruby \
+         --without-swift \
+         --without-haskell \
+         --without-go \
+         --without-rust
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact-name }}
+          asset_name: ${{ matrix.asset-name }}
+          tag: ${{ github.ref }}
