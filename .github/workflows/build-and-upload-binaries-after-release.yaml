@@ -43,7 +43,10 @@ jobs:
          --without-swift \
          --without-haskell \
          --without-go \
-         --without-rust
+         --without-rs \
+         --without-netstd \
+         --without-c_glib \
+         --without-nodejs
       - name: Build
         run: make
       - name: Upload binaries to release
