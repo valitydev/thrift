@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: apt install automake bison
+      - run: sudo apt install automake bison
       - run: ./bootstrap.sh
       - name: Configure
         run: |
