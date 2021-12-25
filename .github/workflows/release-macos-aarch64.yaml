@@ -9,8 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: brew install automake bison
-      - run: export PATH="/opt/homebrew/opt/bison/bin:$PATH"
-      - run: export LDFLAGS="-L/opt/homebrew/opt/bison/lib"
+      - name: Set env
+        run: echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
+      # - run: export LDFLAGS="-L$(brew --prefix bison)/lib" LDFLAGS='-L$(brew --prefix bison)/lib'
       - run: ./bootstrap.sh
-      - run: ./configure LDFLAGS='-L/opt/homebrew/opt/bison/lib' --host=aarch64-apple-darwin --without-perl
+      - run: ./configure --host=aarch64-apple-darwin --without-perl
       - run: make
