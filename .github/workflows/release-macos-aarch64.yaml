@@ -12,5 +12,18 @@ jobs:
       - name: Set env
         run: echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
       - run: ./bootstrap.sh
-      - run: ./configure --host=aarch64-apple-darwin --disable-debug --disable-tests --without-java
+      - name: Configure
+        run: |
+         ./configure \
+         --host=aarch64-apple-darwin \
+         --disable-debug \
+         --disable-tests \
+         --without-java \
+         --without-erlang \
+         --without-python \
+         --without-py3 \
+         --without-php \
+         --without-perl \
+         --without-ruby \
+         --without-swift
       - run: make
