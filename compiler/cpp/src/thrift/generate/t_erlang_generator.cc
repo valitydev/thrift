@@ -972,7 +972,7 @@ void t_erlang_generator::generate_record_metadata(std::ostream& erl) {
 
   vec structs;
   gather_struct_types(get_program(), structs);
-  std::string const& ns = get_program()->get_namespace("erlang");
+  // std::string const& ns = get_program()->get_namespace("erlang");
 
   indenter i;
   if (structs.size() > 0) {
