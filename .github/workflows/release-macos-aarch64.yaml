@@ -25,5 +25,6 @@ jobs:
          --without-php \
          --without-perl \
          --without-ruby \
-         --without-swift
+         --without-swift \
+         --without-haskell
       - run: make
