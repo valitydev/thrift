@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
-      - run: brew install automake
+      - run: brew install automake bison
       - name: Set env
         run: echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
       - run: ./bootstrap.sh
