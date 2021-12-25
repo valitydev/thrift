@@ -9,6 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: brew install automake bison
+      - run: export PATH="$(brew --prefix bison)/bin:$PATH"
       - run: ./bootstrap.sh
       - run: ./configure --host=aarch64-apple-darwin
       - run: make
