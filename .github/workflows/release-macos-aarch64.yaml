@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: brew install automake bison@2.7
-      - run: export PATH="$(brew --prefix bison)/bin:$PATH"
+      - run: export LDFLAGS="-L$(brew --prefix bison)/lib"
       - run: ./bootstrap.sh
       - run: ./configure --host=aarch64-apple-darwin
       - run: make
