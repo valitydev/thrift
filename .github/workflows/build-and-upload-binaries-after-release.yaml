@@ -44,10 +44,12 @@ jobs:
          --without-haskell \
          --without-go \
          --without-rust
+      - name: Build
+        run: make
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact-name }}
+          file: compiler/cpp/${{ matrix.artifact-name }}
           asset_name: ${{ matrix.asset-name }}
           tag: ${{ github.ref }}
