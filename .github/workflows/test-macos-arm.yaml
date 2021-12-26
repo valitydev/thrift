@@ -1,0 +1,34 @@
+name: build
+on:
+  - pull_request
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: brew install automake bison && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
+      - name: Pre-configure
+        run: |
+         arch -arm64 ./bootstrap.sh && \
+         ./configure \
+         --disable-debug \
+         --disable-tests \
+         --without-java \
+         --without-erlang \
+         --without-python \
+         --without-py3 \
+         --without-php \
+         --without-perl \
+         --without-ruby \
+         --without-swift \
+         --without-haskell \
+         --without-go \
+         --without-rs \
+         --without-netstd \
+         --without-c_glib \
+         --without-nodejs
+      - name: Build
+        run: arch -arm64 make
