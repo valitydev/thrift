@@ -14,7 +14,7 @@ jobs:
         run: echo "CFLAGS=-target arm64-apple-macos10.5" >> $GITHUB_ENV
       - name: Build with XCode
         run: |
-          cd compiler\cpp && \
+          cd compiler/cpp && \
           mkdir cmake-build && \
           cd cmake-build && \
           cmake -G "Xcode" .. && \
