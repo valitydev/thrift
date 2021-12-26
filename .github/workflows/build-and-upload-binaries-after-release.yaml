@@ -12,47 +12,36 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact-name: thrift
-            asset-name: thrift-linux-amd64
-            install-deps: sudo apt install -yq automake bison
-            host: amd64-linux
+            artifact-name: thrift-${{ github.ref }}-linux-amd64.tar.gz
+            install-deps: sudo apt install -yq automake bison flex cmake
+            build-command: make
+            artifact-dir: compiler/cpp/cmake-build/bin
           - os: macos-latest
-            artifact-name: thrift
-            asset-name: thrift-macos-aarch64
-            install-deps: brew install automake bison && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
-            host: aarch64-apple-darwin
+            artifact-name: thrift-${{ github.ref }}-darwin-arm64.tar.gz
+            install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
+            build-command: cmake --build .
+            artifact-dir: compiler/cpp/cmake-build/bin/Debug
+            cmake-parameters: -G "Xcode"
 
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
         run: ${{ matrix.install-deps }}
-      - name: Pre-configure
-        run: |
-         ./bootstrap.sh && \
-         ./configure \
-         --host=${{ matrix.host }} \
-         --disable-debug \
-         --disable-tests \
-         --without-java \
-         --without-erlang \
-         --without-python \
-         --without-py3 \
-         --without-php \
-         --without-perl \
-         --without-ruby \
-         --without-swift \
-         --without-haskell \
-         --without-go \
-         --without-rs \
-         --without-netstd \
-         --without-c_glib \
-         --without-nodejs
       - name: Build
-        run: make
+        run: |
+          cd compiler/cpp && \
+          mkdir cmake-build && \
+          cd cmake-build && \
+          cmake ${{ matrix.cmake-parameters }} .. && \
+          ${{ matrix.build-command }}
+        env:
+          CMAKE_OSX_ARCHITECTURES: arm64
+          CXXFLAGS: -std=c++11
+      - name: Make dist
+        run: mkdir dist && tar -czvf dist/${{ matrix.artifact-name }} -C ${{ matrix.artifact-dir }} thrift
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: compiler/cpp/${{ matrix.artifact-name }}
-          asset_name: ${{ matrix.asset-name }}
+          file: dist/${{ matrix.artifact-name }}
           tag: ${{ github.ref }}
