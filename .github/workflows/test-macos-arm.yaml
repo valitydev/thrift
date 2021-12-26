@@ -21,7 +21,5 @@ jobs:
           # CFLAGS: -target arm64-apple-macos11
           CMAKE_OSX_ARCHITECTURES: arm64
           CXXFLAGS: -std=c++11
-      - name: Build
-        run: cd compiler/cpp/cmake-build && ls -la
       - name: Check arch
-        run: lipo -archs compiler/cpp/thrift
+        run: lipo -archs compiler/cpp/cmake-build/bin/Debug/thrift
