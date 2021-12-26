@@ -12,8 +12,9 @@ jobs:
         run: brew install automake bison && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
       - name: Pre-configure
         run: |
-         arch -arm64 ./bootstrap.sh && \
+         ./bootstrap.sh && \
          ./configure \
+         CFLAGS='-target arm64-apple-macos10.5' \
          --disable-debug \
          --disable-tests \
          --without-java \
@@ -31,4 +32,6 @@ jobs:
          --without-c_glib \
          --without-nodejs
       - name: Build
-        run: arch -arm64 make
+        run: make
+      - name: Check arch
+        run: lipo -archs compiler/cpp//thrift
