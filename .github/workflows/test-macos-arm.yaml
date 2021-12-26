@@ -18,7 +18,7 @@ jobs:
           cmake -G "Xcode" .. && \
           cmake --build .
         env:
-          CFLAGS: -target arm64-apple-macos11
+          # CFLAGS: -target arm64-apple-macos11
           CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       - name: Build
         run: make
