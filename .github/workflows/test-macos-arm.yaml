@@ -11,7 +11,7 @@ jobs:
       - name: Install deps
         run: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
       - name: Install CFLAGS
-        run: echo "CFLAGS=-target arm64-apple-macos10.5" >> $GITHUB_ENV
+        run: echo "CFLAGS=-target arm64-apple-macos11" >> $GITHUB_ENV
       - name: Build with XCode
         run: |
           cd compiler/cpp && \
