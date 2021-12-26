@@ -8,10 +8,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install CFLAGS
+        env:
+          CFLAGS: -target arm64-apple-macos11
       - name: Install deps
         run: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
-      - name: Install CFLAGS
-        run: echo "CFLAGS=-target arm64-apple-macos11" >> $GITHUB_ENV
       - name: Build with XCode
         run: |
           cd compiler/cpp && \
