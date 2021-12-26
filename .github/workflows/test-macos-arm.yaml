@@ -9,28 +9,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
-        run: brew install automake bison && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
-      - name: Pre-configure
+        run: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
+      - name: Install CFLAGS
+        run: echo "CFLAGS=-target arm64-apple-macos10.5" >> $GITHUB_ENV
+      - name: Build with XCode
         run: |
-         ./bootstrap.sh && \
-         ./configure \
-         CFLAGS='-target arm64-apple-macos10.5' \
-         --disable-debug \
-         --disable-tests \
-         --without-java \
-         --without-erlang \
-         --without-python \
-         --without-py3 \
-         --without-php \
-         --without-perl \
-         --without-ruby \
-         --without-swift \
-         --without-haskell \
-         --without-go \
-         --without-rs \
-         --without-netstd \
-         --without-c_glib \
-         --without-nodejs
+          cd compiler\cpp && \
+          mkdir cmake-build && \
+          cd cmake-build && \
+          cmake -G "Xcode" .. && \
+          cmake --build .
       - name: Build
         run: make
       - name: Check arch
