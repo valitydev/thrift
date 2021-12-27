@@ -16,7 +16,7 @@ jobs:
          ./configure \
          --disable-debug \
          --disable-tests \
-         --with-java \
+         --without-java \
          --with-erlang \
          --without-python \
          --without-py3 \

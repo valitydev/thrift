@@ -13,7 +13,7 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin/thrift
-            asset-name: thrift-linux-amd64
+            asset-name: thrift-linux-x86_64
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
           - os: macos-latest
