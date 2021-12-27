@@ -17,7 +17,7 @@ jobs:
          --disable-debug \
          --disable-tests \
          --without-java \
-         --without-erlang \
+         --with-erlang \
          --without-python \
          --without-py3 \
          --without-php \
