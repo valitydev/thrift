@@ -2204,7 +2204,7 @@ void t_java_generator::generate_java_struct_get_fields(ostream& out) {
 }
 
 void t_java_generator::generate_java_struct_get_metadata(ostream& out) {
-  indent(out) << "public Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> getFieldMetaData() {" << endl;
+  indent(out) << "public java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> getFieldMetaData() {" << endl;
   indent(out) << "  return metaDataMap;" << endl;
   indent(out) << "}" << endl << endl;
 }
