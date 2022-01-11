@@ -511,7 +511,7 @@ void t_js_generator::init_generator() {
  */
 string t_js_generator::js_includes() {
   if (gen_node_) {
-    string result = js_const_type_ + "thrift = require('thrift');\n"
+    string result = js_const_type_ + "thrift = require('" + gen_node_runtime_package_ + "');\n"
         + js_const_type_ + "Thrift = thrift.Thrift;\n";
     if (!gen_es6_) {
       result += js_const_type_ + "Q = thrift.Q;\n";
