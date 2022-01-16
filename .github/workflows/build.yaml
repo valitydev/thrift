@@ -12,20 +12,17 @@ jobs:
           - os-name: Linux x86_64
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
-            asset-name: thrift-${{ github.ref_name }}-linux-x86_64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
           - os-name: Macos ARM64
             os: macos-latest
             artifact-path: compiler/cpp/cmake-build/bin/Debug
-            asset-name: thrift-${{ github.ref_name }}-darwin-arm64.tar.gz
             install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
             build-command: cmake --build .
             cmake-parameters: -G "Xcode"
           - os-name: Linux ARM64
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
-            asset-name: thrift-${{ github.ref_name }}-linux-aarch64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
             cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="../../../build/cmake/ARM.cmake"
             build-command: make
@@ -45,4 +42,4 @@ jobs:
           CMAKE_OSX_ARCHITECTURES: arm64
           CXXFLAGS: -std=c++11
       - name: Make dist
-        run: mkdir dist && tar -czvf dist/${{ matrix.asset-name }} -C ${{ matrix.artifact-path }} thrift
+        run: mkdir dist && tar -czvf dist/tmp.tar.gz -C ${{ matrix.artifact-path }} thrift
