@@ -4,23 +4,26 @@ on:
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}
+    name: Build for ${{ matrix.os-name }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os-name: Linux x86_64
+            os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-x86_64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
-          - os: macos-latest
+          - os-name: Macos ARM64
+            os: macos-latest
             artifact-path: compiler/cpp/cmake-build/bin/Debug
             asset-name: thrift-${{ github.ref_name }}-darwin-arm64.tar.gz
             install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
             build-command: cmake --build .
             cmake-parameters: -G "Xcode"
-          - os: ubuntu-latest
+          - os-name: Linux ARM64
+            os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-aarch64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
