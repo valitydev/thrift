@@ -24,7 +24,7 @@ jobs:
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
-            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="../../../build/cmake/ARM.cmake"
+            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="../../../build/cmake/Linux-ARM64.cmake"
             build-command: make
 
     steps:
