@@ -30,7 +30,7 @@ jobs:
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-aarch64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
-            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="${{ env.GITHUB_WORKSPACE }}/build/cmake/Linux-ARM64.cmake"
+            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/build/cmake/Linux-ARM64.cmake"
             build-command: make
 
     steps:
