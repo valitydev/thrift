@@ -16,13 +16,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
-            asset-names: >
+            asset-names: |
               ${{ env.PACKAGE }}-linux-x86_64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
           - os: macos-latest
             artifact-path: compiler/cpp/cmake-build/bin/Debug
-            asset-names: >
+            asset-names: |
               ${{ env.PACKAGE }}-darwin-arm64.tar.gz ${{ env.PACKAGE }}.arm64_monterey.bottle.tar.gz ${{ env.PACKAGE }}.arm64_big_sur.bottle.tar.gz
             install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
             build-command: cmake --build .
