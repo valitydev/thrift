@@ -4,42 +4,31 @@ on:
 
 jobs:
   build:
-    name: Build for ${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - platform: Linux x86_64
-            os: ubuntu-latest
-            artifact-path: compiler/cpp/cmake-build/bin
-            install-deps: sudo apt install -yq automake bison flex cmake
-            build-command: make
-          - platform: Macos ARM64
-            os: macos-latest
-            artifact-path: compiler/cpp/cmake-build/bin/Debug
-            install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
-            build-command: cmake --build .
-            cmake-parameters: -G "Xcode"
-          - platform: Linux ARM64
-            os: ubuntu-latest
-            artifact-path: compiler/cpp/cmake-build/bin
-            install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
-            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="../../../build/cmake/Linux-ARM64.cmake"
-            build-command: make
-
+    name: Build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
-        run: ${{ matrix.install-deps }}
-      - name: Build
+        run: sudo apt install -yq automake bison
+      - name: Pre-configure
         run: |
-          cd compiler/cpp && \
-          mkdir cmake-build && \
-          cd cmake-build && \
-          cmake ${{ matrix.cmake-parameters }} .. && \
-          ${{ matrix.build-command }}
-        env:
-          CMAKE_OSX_ARCHITECTURES: arm64
-          CXXFLAGS: -std=c++11
-      - name: Make dist
-        run: mkdir dist && tar -czvf dist/tmp.tar.gz -C ${{ matrix.artifact-path }} thrift
+         ./bootstrap.sh && \
+         ./configure \
+         --disable-debug \
+         --disable-tests \
+         --with-java \
+         --with-erlang \
+         --without-python \
+         --without-py3 \
+         --without-php \
+         --without-perl \
+         --without-ruby \
+         --without-swift \
+         --without-haskell \
+         --without-go \
+         --without-rs \
+         --without-netstd \
+         --without-c_glib \
+         --without-nodejs
+      - name: Build
+        run: make
