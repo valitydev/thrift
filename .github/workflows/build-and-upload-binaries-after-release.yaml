@@ -3,7 +3,7 @@ name: Build and upload binaries after release
 on:
   release:
     types: [created]
-  - pull_request
+  pull_request
 
 jobs:
   publish:
