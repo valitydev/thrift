@@ -4,23 +4,23 @@ on:
 
 jobs:
   build:
-    name: Build for ${{ matrix.os-name }}
+    name: Build for ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os-name: Linux x86_64
+          - platform: Linux x86_64
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
-          - os-name: Macos ARM64
+          - platform: Macos ARM64
             os: macos-latest
             artifact-path: compiler/cpp/cmake-build/bin/Debug
             install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
             build-command: cmake --build .
             cmake-parameters: -G "Xcode"
-          - os-name: Linux ARM64
+          - platform: Linux ARM64
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
