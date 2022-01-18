@@ -1,27 +1,37 @@
 name: Build and upload binaries after release
 
 on:
+  pull_request:
   release:
     types: [created]
 
 jobs:
   publish:
-    name: Build and upload for ${{ matrix.os }}
+    name: Build and upload for ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - platform: Linux x86_64
+            os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-x86_64.tar.gz
             install-deps: sudo apt install -yq automake bison flex cmake
             build-command: make
-          - os: macos-latest
+          - platform: Macos ARM64
+            os: macos-latest
             artifact-path: compiler/cpp/cmake-build/bin/Debug
             asset-name: thrift-${{ github.ref_name }}-darwin-arm64.tar.gz
             install-deps: brew install automake bison flex cmake && echo "PATH=$(brew --prefix bison)/bin:$PATH" >> $GITHUB_ENV
             build-command: cmake --build .
             cmake-parameters: -G "Xcode"
+          - platform: Linux ARM64
+            os: ubuntu-latest
+            artifact-path: compiler/cpp/cmake-build/bin
+            asset-name: thrift-${{ github.ref_name }}-linux-aarch64.tar.gz
+            install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
+            cmake-parameters: -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/build/cmake/Linux-ARM64.cmake"
+            build-command: make
 
     steps:
       - uses: actions/checkout@v2
@@ -38,8 +48,10 @@ jobs:
           CMAKE_OSX_ARCHITECTURES: arm64
           CXXFLAGS: -std=c++11
       - name: Make dist
+        if: ${{ github.event_name == 'release' }}
         run: mkdir dist && tar -czvf dist/${{ matrix.asset-name }} -C ${{ matrix.artifact-path }} thrift
       - name: Upload binaries to release
+        if: ${{ github.event_name == 'release' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
