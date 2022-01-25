@@ -104,6 +104,17 @@ THRIFT_ADD_COMPILER(swift   "Enable compiler for Cocoa Swift" ON)
 THRIFT_ADD_COMPILER(xml     "Enable compiler for XML" ON)
 THRIFT_ADD_COMPILER(xsd     "Enable compiler for XSD" ON)
 
+option(STATIC "Enable static linking of core libraries (libgcc / libstdc++)")
+
+set(thrift-compiler_LINKER_FLAGS)
+
+if(STATIC)
+    set(thrift-compiler_LINKER_FLAGS
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
+
 # Thrift is looking for include files in the src directory
 # we also add the current binary directory for generated files
 include_directories(${CMAKE_CURRENT_BINARY_DIR} src)
@@ -115,7 +126,7 @@ add_executable(thrift-compiler ${thrift-compiler_SOURCES})
 set_target_properties(thrift-compiler PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin/)
 set_target_properties(thrift-compiler PROPERTIES OUTPUT_NAME thrift)
 
-target_link_libraries(thrift-compiler parse)
+target_link_libraries(thrift-compiler parse ${thrift-compiler_LINKER_FLAGS})
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/thrift${CMAKE_EXECUTABLE_SUFFIX}"
     DEPENDS thrift-compiler
