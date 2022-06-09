@@ -88,6 +88,7 @@ public:
                   const std::map<std::string, std::string>& parsed_options,
                   const std::string& option_string)
     : t_generator(program)
+    , app_namespaces_(false)
     , idiomatic_names_(false)
     , scoped_typenames_(false)
     , app_prefix_("") {
@@ -104,10 +105,22 @@ public:
         continue;
       }
       if(iter->first.compare("app_prefix") == 0) {
-        app_prefix_ = (iter->second) + "_";
+        app_prefix_ = iter->second;
+        strip_unsafe(app_prefix_);
         continue;
       }
-      throw "unknown option:" + iter->first;
+      if(iter->first.compare("app_namespaces") == 0) {
+        app_namespaces_ = true;
+        continue;
+      }
+      throw "unknown option: " + iter->first;
+    }
+
+    if (app_namespaces_ && scoped_typenames_) {
+      throw "conflicting options: app_namespaces, scoped_typenames";
+    }
+    if (app_namespaces_ && !app_prefix_.empty()) {
+      throw "conflicting options: app_namespaces, app_prefix";
     }
 
     out_dir_base_ = "gen-erlang";
@@ -158,9 +171,10 @@ private:
   /**
    * options
    */
+  bool app_namespaces_;
   bool idiomatic_names_;
   bool scoped_typenames_;
-  std::string app_prefix_;
+  std::string app_prefix_; // deprecated
 
   /**
    * write out headers and footers for hrl files
@@ -173,8 +187,9 @@ private:
    */
   static std::string render_namespace(const t_program*);
   static std::string render_namespaced(const t_program*, std::string const& s);
+  static std::string render_application_name(const t_program*);
+  static std::string render_appmodule_name(const t_program*);
   static std::string render_member_requiredness(t_field* field);
-  static std::string render_include(std::string);
   static std::string render_export(std::string, int);
   static std::string render_export_type(std::string, int);
 
@@ -184,6 +199,7 @@ private:
   static std::string render_attribute_list(std::string, std::string);
   static std::string render_attribute(std::string, std::string);
   std::string render_include(t_program* p);
+  std::string render_local_include(const t_program*);
 
   std::string render_includes();
   std::string render_member_value(std::string name, t_field* field, indenter& ind);
@@ -191,6 +207,8 @@ private:
   std::string render_type(t_type* type, bool force_full_type);
   std::string render_const_value(t_type* type, std::string name, t_const_value* value, indenter& ind);
   std::string render_type_term(t_type* ttype, bool expand_structs, indenter& ind);
+  std::string render_module_name(const t_program* p);
+  std::string render_module_scoped(const std::string in, const t_program*);
 
   template <class Type>
   static std::string render_string(Type const& v);
@@ -254,17 +272,6 @@ private:
 
   std::string type_to_enum(t_type* ttype);
   std::string type_module(const t_type* ttype);
-  std::string type_module(const t_program* program);
-
-  static std::string underscore(std::string const& in);
-
-  std::string modulify(const t_program* p) {
-    return app_prefix_ + underscore(p->get_name());
-  }
-
-  std::string scopify(std::string in) {
-    return scoped_typenames_ ? render_namespaced(get_program(), in) : in;
-  }
 
   static std::string atomify(std::string in) {
     return "'" + in + "'";
@@ -293,7 +300,7 @@ void t_erlang_generator::init_generator() {
   MKDIR(get_out_dir().c_str());
 
   // types files
-  string base_name = type_module(get_program());
+  string base_name = render_module_name(get_program());
   string f_erl_filename = get_out_dir() + base_name + ".erl";
   string f_hrl_filename = get_out_dir() + base_name + ".hrl";
 
@@ -302,7 +309,7 @@ void t_erlang_generator::init_generator() {
 
   f_erl_file_ << erl_autogen_comment() << endl
               << render_attribute("module", base_name) << endl
-              << render_include(base_name + ".hrl") << endl;
+              << render_local_include(get_program()) << endl;
 
   f_hrl_file_ << render_hrl_header(base_name) << endl
               << render_includes() << endl;
@@ -355,7 +362,16 @@ string t_erlang_generator::render_includes() {
 }
 
 string t_erlang_generator::render_include(t_program* p) {
-  return render_include(modulify(p) + OUT_FILE_SUFFIX + ".hrl");
+  if (app_namespaces_) {
+    return "%% YOU MIGHT ALSO CONDIDER INCLUDING \"" + render_module_name(p) + ".hrl\"" + endl;
+  }
+  else {
+    return render_local_include(p);
+  }
+}
+
+string t_erlang_generator::render_local_include(const t_program* p) {
+  return render_attribute("include", "\"" + render_module_name(p) + ".hrl\"");
 }
 
 /**
@@ -749,9 +765,9 @@ void t_erlang_generator::generate_enum_metadata(std::ostream& os) {
  */
 void t_erlang_generator::generate_const(t_const* tconst) {
   indenter i;
-  f_hrl_file_ << "-define(" << constify(scopify(tconst->get_name())) << ", "
-              << render_const_value(tconst->get_type(), tconst->get_name(), tconst->get_value(), i) << ")."
-              << endl << endl;
+  std::string name = constify(render_module_scoped(tconst->get_name(), tconst->get_type()->get_program()));
+  std::string value = render_const_value(tconst->get_type(), tconst->get_name(), tconst->get_value(), i);
+  f_hrl_file_ << "-define(" << name << ", " << value << ")." << endl << endl;
 }
 
 /**
@@ -1265,10 +1281,6 @@ string t_erlang_generator::render_hrl_footer() {
   return "-endif." + endl;
 }
 
-string t_erlang_generator::render_include(string filename) {
-  return render_attribute("include", "\"" + filename + "\"");
-}
-
 string t_erlang_generator::render_export(string name, int arity) {
   return render_attribute_list("export", name + "/" + render_string(arity));
 }
@@ -1461,11 +1473,74 @@ std::string t_erlang_generator::render_type_term(t_type* type,
 }
 
 std::string t_erlang_generator::type_module(const t_type* ttype) {
-  return type_module(ttype->get_program());
+  return render_module_name(ttype->get_program());
 }
 
-std::string t_erlang_generator::type_module(const t_program* p) {
-  return modulify(p) + OUT_FILE_SUFFIX;
+namespace detail {
+
+static std::string render_thrift_filename(const t_program* p) {
+  if (p->get_include_prefix().size() > 0) {
+    return p->get_include_prefix() + p->get_name() + ".thrift";
+  } else {
+    return p->get_name() + ".thrift";
+  }
+}
+
+static std::pair<std::string, std::string> render_appns_names(const t_program* p) {
+  std::string app_name;
+  std::string mod_name;
+  std::string ns = p->get_namespace("erlang");
+  if (ns.empty()) {
+    throw "[" + render_thrift_filename(p) + "] namespace 'erlang' is not defined but is required by 'app_namespaces'";
+  }
+  size_t ploc = ns.find(".");
+  if (ploc != std::string::npos) {
+    app_name = ns.substr(0, ploc);
+    strip_unsafe(app_name);
+    mod_name = ns.substr(ploc + 1);
+    strip_unsafe(mod_name);
+  }
+  if (app_name.empty()
+    || mod_name.empty()
+    || std::count(app_name.begin(), app_name.end(), '_') == app_name.size()
+    || std::count(mod_name.begin(), mod_name.end(), '_') == mod_name.size()) {
+    throw "[" + render_thrift_filename(p) + "] namespace 'erlang' MUST have the form `<app-name>.<module-name>` when 'app_namespaces' is on";
+  }
+  return std::make_pair(app_name, mod_name);
+}
+
+}
+
+std::string t_erlang_generator::render_application_name(const t_program* p) {
+  return detail::render_appns_names(p).first;
+}
+
+std::string t_erlang_generator::render_appmodule_name(const t_program* p) {
+  return detail::render_appns_names(p).second;
+}
+
+std::string t_erlang_generator::render_module_name(const t_program* p) {
+  std::string name;
+  if (app_namespaces_) {
+    name = render_application_name(p) + "_" + render_appmodule_name(p);
+  }
+  else if (!app_prefix_.empty()) {
+    name = app_prefix_ + "_" + snake_case(p->get_name());
+  }
+  else {
+    name = snake_case(p->get_name());
+  }
+  return name + OUT_FILE_SUFFIX;
+}
+
+std::string t_erlang_generator::render_module_scoped(std::string in, const t_program* p) {
+  if (app_namespaces_) {
+    return render_appmodule_name(p != nullptr ? p : get_program()) + "_" + in;
+  }
+  if (scoped_typenames_) {
+    return render_namespaced(get_program(), in);
+  }
+  return in;
 }
 
 /**
@@ -1484,7 +1559,16 @@ string t_erlang_generator::erl_autogen_comment() {
 THRIFT_REGISTER_GENERATOR(
   erlang,
   "Erlang",
+  "    app_namespaces:   Treat namespaces defined in Thrift modules as Erlang application names.\n"
+  "                      (conflicts with 'scoped_typenames', 'app_prefix')\n"
+  "                       * Thrift module MUST contain 'erlang' namespace of the form '<app-name>.<module-name>'"
+  "                       * Each generated Erlang module filename takes the form '<app-name>_<module-name>_thrift.erl'.\n"
+  "                       * Each generated Erlang header filename takes the form '<app-name>_<module-name>_thrift.hrl'.\n"
+  "                       * Each generated Erlang record's name is qualified with <module-name>.\n"
+  "                       * Generated Erlang headers will not contain include directives.\n"
   "    idiomatic:        Adapt every name to look idiomatically correct in Erlang (i.e. snake case).\n"
   "    scoped_typenames: Prefix generated Erlang records with the namespace defined for erl.\n"
+  "                      (conflicts with 'app_namespaces')\n"
   "    app_prefix=       Application prefix for generated Erlang files.\n"
+  "                      (deprecated, conflicts with 'app_namespaces')\n"
 )
