@@ -1500,8 +1500,8 @@ static std::pair<std::string, std::string> render_appns_names(const t_program* p
   }
   if (app_name.empty()
     || mod_name.empty()
-    || std::count(app_name.begin(), app_name.end(), '_') == app_name.size()
-    || std::count(mod_name.begin(), mod_name.end(), '_') == mod_name.size()) {
+    || size_t(std::count(app_name.begin(), app_name.end(), '_')) == app_name.size()
+    || size_t(std::count(mod_name.begin(), mod_name.end(), '_')) == mod_name.size()) {
     throw "[" + render_thrift_filename(p) + "] namespace 'erlang' MUST have the form `<app-name>.<module-name>` when 'app_namespaces' is on";
   }
   return std::make_pair(app_name, mod_name);
