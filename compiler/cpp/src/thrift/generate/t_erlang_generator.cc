@@ -942,9 +942,7 @@ string t_erlang_generator::render_type(t_type* type, bool force) {
     default:
       throw "compiler error: unsupported base type " + t_base_type::t_base_name(tbase);
     }
-  } else if (type->is_enum()) {
-    return "atom()";
-  } else if (type->is_struct() || type->is_xception() || type->is_typedef()) {
+  } else if (type->is_struct() || type->is_xception() || type->is_typedef() || type->is_enum()) {
     return force || type->get_program() != get_program() ?
       type_module(type) + ":" + type_name(type) + "()" :
       type_name(type) + "()";
