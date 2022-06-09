@@ -17,10 +17,12 @@
  * under the License.
  */
 
+#include <algorithm>
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include "thrift/generate/t_generator.h"
 #include "thrift/platform.h"
