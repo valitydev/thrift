@@ -44,6 +44,39 @@ using std::vector;
 
 static const std::string endl = "\n"; // avoid ostream << std::endl flushes
 
+static string & strip_unsafe(string & s) {
+  struct detail {
+    static char strip_unsafe(char c) {
+      switch (c) {
+        case '.': case '-': case '/': case '\\':
+          return '_';
+        default:
+          return c;
+      }
+    }
+  };
+  std::transform(s.begin(), s.end(), s.begin(), detail::strip_unsafe);
+  return s;
+}
+
+static std::string snake_case(std::string const& in) {
+  string r = "";
+  char c1, c2, c3;
+  for (size_t i = 0, j = in.size() - 1; i < j + 1; ++i) {
+    c1 = in[0 == i ? i : i - 1];
+    c2 = in[i];
+    c3 = in[j == i ? i : i + 1];
+    if (isupper(c2) && islower(c3) && i > 0) {
+      r.push_back('_');
+    }
+    else if (islower(c1) && isupper(c2)) {
+      r.push_back('_');
+    }
+    r.push_back(tolower(c2));
+  }
+  return r;
+}
+
 /**
  * Erlang code generator.
  */
@@ -238,8 +271,6 @@ private:
   static std::string constify(std::string in) {
     return uppercase(in);
   }
-
-  static std::string & strip_unsafe(std::string & s);
 
   /**
    * File streams
@@ -566,7 +597,7 @@ void t_erlang_generator::generate_enum_types(std::ostream& os) {
     if (constants.size() > 0) {
       os << i.nlup();
       for (vec_ev::const_iterator ev = constants.begin(); ev != constants.end();) {
-        os << atomify(underscore((*ev)->get_name()));
+        os << atomify(snake_case((*ev)->get_name()));
         if (++ev != constants.end()) {
         os << " |" << i.nl();
         }
@@ -683,7 +714,7 @@ void t_erlang_generator::generate_enum_info(std::ostream& buf, t_enum* tenum) {
     buf << i.nlup();
     for (vector<t_enum_value*>::const_iterator it = constants.begin(); it != constants.end(); ) {
       int value = (*it)->get_value();
-      string name = atomify(underscore((*it)->get_name()));
+      string name = atomify(snake_case((*it)->get_name()));
       buf << "{" << name << ", " << value << "}";
       if (++it != constants.end()) {
         buf << "," << i.nl();
@@ -1260,39 +1291,6 @@ string t_erlang_generator::render_namespaced(const t_program* program, string co
   return s;
 }
 
-string t_erlang_generator::underscore(string const& in) {
-  string r = "";
-  char c1, c2, c3;
-  for (size_t i = 0, j = in.size() - 1; i < j + 1; ++i) {
-    c1 = in[0 == i ? i : i - 1];
-    c2 = in[i];
-    c3 = in[j == i ? i : i + 1];
-    if (isupper(c2) && islower(c3) && i > 0) {
-      r.push_back('_');
-    }
-    else if (islower(c1) && isupper(c2)) {
-      r.push_back('_');
-    }
-    r.push_back(tolower(c2));
-  }
-  return r;
-}
-
-string & t_erlang_generator::strip_unsafe(string & s) {
-  struct detail {
-    static char strip_unsafe(char c) {
-      switch (c) {
-        case '.': case '-': case '/': case '\\':
-          return '_';
-        default:
-          return c;
-      }
-    }
-  };
-  std::transform(s.begin(), s.end(), s.begin(), detail::strip_unsafe);
-  return s;
-}
-
 template <class Type>
 std::string t_erlang_generator::render_string(Type const& v) {
   std::ostringstream s;
@@ -1302,14 +1300,12 @@ std::string t_erlang_generator::render_string(Type const& v) {
 
 string t_erlang_generator::type_name(t_type* ttype) {
   string const& n = ttype->get_name();
-  string result = idiomatic_names_ ? underscore(n) : n;
-  return atomify(result);
+  return atomify(idiomify(n));
 }
 
 string t_erlang_generator::scoped_type_name(t_type* ttype) {
   string const& n = ttype->get_name();
-  string result = idiomatic_names_ ? underscore(n) : n;
-  return atomify(scopify(result));
+  return atomify(render_module_scoped(idiomify(n), ttype->get_program()));
 }
 
 string t_erlang_generator::service_name(t_service* tservice) {
@@ -1322,17 +1318,15 @@ string t_erlang_generator::service_name(t_service* tservice, bool do_atomify) {
 }
 
 string t_erlang_generator::idiomify(const std::string& str) {
-  return idiomatic_names_ ? underscore(str) :str;
+  return idiomatic_names_ ? snake_case(str) : str;
 }
 
 string t_erlang_generator::function_name(t_function* tfun) {
-  string const& n = tfun->get_name();
-  return atomify(idiomatic_names_ ? underscore(n) : n);
+  return atomify(idiomify(tfun->get_name()));
 }
 
 string t_erlang_generator::field_name(t_field* tfield) {
-  string const& n = tfield->get_name();
-  return atomify(idiomatic_names_ ? underscore(n) : n);
+  return atomify(idiomify(tfield->get_name()));
 }
 
 /**
