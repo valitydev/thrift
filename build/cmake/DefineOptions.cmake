@@ -99,10 +99,10 @@ if(ANDROID)
     CMAKE_DEPENDENT_OPTION(BUILD_JAVA "Build Java library" ON
                            "BUILD_LIBRARIES;WITH_JAVA;GRADLE_FOUND" OFF)
 else()
-    find_package(Gradlew QUIET)
+    find_package(Gradle QUIET)
     find_package(Java QUIET)
     CMAKE_DEPENDENT_OPTION(BUILD_JAVA "Build Java library" ON
-                           "BUILD_LIBRARIES;WITH_JAVA;JAVA_FOUND;GRADLEW_FOUND" OFF)
+                           "BUILD_LIBRARIES;WITH_JAVA;JAVA_FOUND;GRADLE_FOUND" OFF)
 endif()
 
 # Javascript
@@ -121,13 +121,6 @@ find_package(PythonInterp QUIET) # for Python executable
 find_package(PythonLibs QUIET) # for Python.h
 CMAKE_DEPENDENT_OPTION(BUILD_PYTHON "Build Python library" ON
                        "BUILD_LIBRARIES;WITH_PYTHON;PYTHONINTERP_FOUND;PYTHONLIBS_FOUND" OFF)
-
-# Haskell
-option(WITH_HASKELL "Build Haskell Thrift library" ON)
-find_package(GHC QUIET)
-find_package(Cabal QUIET)
-CMAKE_DEPENDENT_OPTION(BUILD_HASKELL "Build GHC library" ON
-                       "BUILD_LIBRARIES;WITH_HASKELL;GHC_FOUND;CABAL_FOUND" OFF)
 
 # Common library options
 # https://cmake.org/cmake/help/latest/variable/BUILD_SHARED_LIBS.html
@@ -152,7 +145,7 @@ endif ()
 
 # Visual Studio only options
 if(MSVC)
-    option(WITH_MT "Build using MT instead of MD (MSVC only)" OFF)
+    option(WITH_MT "Build using the static runtime 'MT' instead of the shared DLL-specific runtime 'MD' (MSVC only)" OFF)
 endif(MSVC)
 
 macro(MESSAGE_DEP flag summary)
@@ -204,7 +197,7 @@ if(ANDROID)
     MESSAGE_DEP(GRADLE_FOUND "Gradle missing")
 else()
     MESSAGE_DEP(JAVA_FOUND "Java Runtime missing")
-    MESSAGE_DEP(GRADLEW_FOUND "Gradle Wrapper missing")
+    MESSAGE_DEP(GRADLE_FOUND "Gradle missing")
 endif()
 message(STATUS "  Build Javascript library:                   ${BUILD_JAVASCRIPT}")
 MESSAGE_DEP(WITH_JAVASCRIPT "Disabled by WITH_JAVASCRIPT=OFF")
@@ -214,11 +207,10 @@ message(STATUS)
 message(STATUS "  Build Python library:                       ${BUILD_PYTHON}")
 MESSAGE_DEP(WITH_PYTHON "Disabled by WITH_PYTHON=OFF")
 MESSAGE_DEP(PYTHONLIBS_FOUND "Python libraries missing")
+if(MSVC)
+    message(STATUS "  Using static runtime library:               ${WITH_MT}")
+endif(MSVC)
 message(STATUS)
-message(STATUS "  Build Haskell library:                      ${BUILD_HASKELL}")
-MESSAGE_DEP(WITH_HASKELL "Disabled by WITH_HASKELL=OFF")
-MESSAGE_DEP(GHC_FOUND "GHC missing")
-MESSAGE_DEP(CABAL_FOUND "Cabal missing")
 message(STATUS)
 message(STATUS "----------------------------------------------------------")
 endmacro(PRINT_CONFIG_SUMMARY)

@@ -85,17 +85,6 @@ RUN apt-get install -y --no-install-recommends \
       qtbase5-dev \
       qtbase5-dev-tools
 
-ENV SBCL_VERSION 1.4.5
-RUN \
-`# Common Lisp (sbcl) dependencies` \
-    curl --version && \
-    curl -O -J -L https://kent.dl.sourceforge.net/project/sbcl/sbcl/${SBCL_VERSION}/sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2 && \
-    tar xjf sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2 && \
-    cd sbcl-${SBCL_VERSION}-x86-64-linux && \
-    ./install.sh && \
-    sbcl --version && \
-    rm -rf sbcl*
-
 ENV D_VERSION     2.080.0
 ENV DMD_DEB       dmd_2.080.0-0_amd64.deb
 RUN \
@@ -114,13 +103,16 @@ RUN \
     rm -rf openssl-master
 
 RUN apt-get install -y --no-install-recommends \
-      `# Dart dependencies` \
+`# Dart dependencies` \
       dart=$DART_VERSION
 ENV PATH /usr/lib/dart/bin:$PATH
 
 RUN apt-get install -y --no-install-recommends \
 `# dotnet core dependencies` \
-      dotnet-sdk-2.1.4
+      dotnet-sdk-6.0 \
+      dotnet-runtime-6.0 \
+      aspnetcore-runtime-6.0 \
+      dotnet-apphost-pack-6.0
 
 RUN apt-get install -y --no-install-recommends \
 `# Erlang dependencies` \
@@ -143,11 +135,6 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz && \
             tar -C /usr/local -xzf golang.tar.gz && \
                   ln -s /usr/local/go/bin/go /usr/local/bin && \
                         rm golang.tar.gz
-
-RUN apt-get install -y --no-install-recommends \
-`# Haskell dependencies` \
-      ghc \
-      cabal-install
 
 RUN apt-get install -y --no-install-recommends \
 `# Haxe dependencies` \

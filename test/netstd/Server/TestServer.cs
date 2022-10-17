@@ -35,6 +35,8 @@ using Thrift.Transport;
 using Thrift.Transport.Server;
 
 #pragma warning disable IDE0063  // using can be simplified, we don't
+#pragma warning disable IDE0057  // substr can be simplified, we don't
+#pragma warning disable CS1998   // await missing
 
 namespace ThriftTest
 {
@@ -59,13 +61,21 @@ namespace ThriftTest
         Framed
     }
 
+    internal enum ServerChoice
+    {
+        Simple,
+        ThreadPool
+    }
+
+
     internal class ServerParam
     {
         internal BufferChoice buffering = BufferChoice.None;
         internal ProtocolChoice protocol = ProtocolChoice.Binary;
         internal TransportChoice transport = TransportChoice.Socket;
+        internal ServerChoice server = ServerChoice.Simple;
         internal int port = 9090;
-        internal string pipe = null;
+        internal string pipe = string.Empty;
 
         internal void Parse(List<string> args)
         {
@@ -102,13 +112,17 @@ namespace ThriftTest
                 {
                     protocol = ProtocolChoice.Json;
                 }
+                else if (args[i] == "--server-type=simple")
+                {
+                    server = ServerChoice.Simple;
+                }
                 else if (args[i] == "--threaded" || args[i] == "--server-type=threaded")
                 {
                     throw new NotImplementedException(args[i]);
                 }
                 else if (args[i] == "--threadpool" || args[i] == "--server-type=threadpool")
                 {
-                    throw new NotImplementedException(args[i]);
+                    server = ServerChoice.ThreadPool;
                 }
                 else if (args[i] == "--prototype" || args[i] == "--processor=prototype")
                 {
@@ -149,8 +163,11 @@ namespace ThriftTest
 
     public class TestServer
     {
-        public static int _clientID = -1;
-        private static readonly TConfiguration Configuration = null;  // or new TConfiguration() if needed
+        #pragma warning disable CA2211
+        public static int _clientID = -1;  // use with Interlocked only!
+        #pragma warning restore CA2211
+
+        private static readonly TConfiguration Configuration = new(); 
 
         public delegate void TestLogDelegate(string msg, params object[] values);
 
@@ -164,10 +181,10 @@ namespace ThriftTest
                 return Task.CompletedTask;
             }
 
-            public Task<object> CreateContextAsync(TProtocol input, TProtocol output, CancellationToken cancellationToken)
+            public async Task<object?> CreateContextAsync(TProtocol input, TProtocol output, CancellationToken cancellationToken)
             {
                 callCount++;
-                return Task.FromResult<object>(null);
+                return null;
             }
 
             public Task DeleteContextAsync(object serverContext, TProtocol input, TProtocol output, CancellationToken cancellationToken)
@@ -185,9 +202,9 @@ namespace ThriftTest
 
         public class TestHandlerAsync : ThriftTest.IAsync
         {
-            public TServer Server { get; set; }
+            //public TServer Server { get; set; }
             private readonly int handlerID;
-            private readonly StringBuilder sb = new StringBuilder();
+            private readonly StringBuilder sb = new();
             private readonly TestLogDelegate logger;
 
             public TestHandlerAsync()
@@ -206,174 +223,186 @@ namespace ThriftTest
                 Console.Write(sb.ToString());
             }
 
-            public Task testVoidAsync(CancellationToken cancellationToken)
+            public Task testVoid(CancellationToken cancellationToken)
             {
                 logger.Invoke("testVoid()");
                 return Task.CompletedTask;
             }
 
-            public Task<string> testStringAsync(string thing, CancellationToken cancellationToken)
+            public Task<string> testString(string? thing, CancellationToken cancellationToken)
             {
-                logger.Invoke("testString({0})", thing);
-                return Task.FromResult(thing);
+                logger.Invoke("testString({0})", thing ?? "<null>");
+                return Task.FromResult(thing ?? string.Empty);
             }
 
-            public Task<bool> testBoolAsync(bool thing, CancellationToken cancellationToken)
+            public Task<bool> testBool(bool thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testBool({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<sbyte> testByteAsync(sbyte thing, CancellationToken cancellationToken)
+            public Task<sbyte> testByte(sbyte thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testByte({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<int> testI32Async(int thing, CancellationToken cancellationToken)
+            public Task<int> testI32(int thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testI32({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<long> testI64Async(long thing, CancellationToken cancellationToken)
+            public Task<long> testI64(long thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testI64({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<double> testDoubleAsync(double thing, CancellationToken cancellationToken)
+            public Task<double> testDouble(double thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testDouble({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<byte[]> testBinaryAsync(byte[] thing, CancellationToken cancellationToken)
+            public Task<byte[]> testBinary(byte[]? thing, CancellationToken cancellationToken)
             {
-                logger.Invoke("testBinary({0} bytes)", thing.Length);
-                return Task.FromResult(thing);
+                logger.Invoke("testBinary({0} bytes)", thing?.Length ?? 0);
+                return Task.FromResult(thing ?? Array.Empty<byte>());
             }
 
-            public Task<Xtruct> testStructAsync(Xtruct thing, CancellationToken cancellationToken)
+            public Task<Xtruct> testStruct(Xtruct? thing, CancellationToken cancellationToken)
             {
-                logger.Invoke("testStruct({{\"{0}\", {1}, {2}, {3}}})", thing.String_thing, thing.Byte_thing, thing.I32_thing, thing.I64_thing);
-                return Task.FromResult(thing);
+                logger.Invoke("testStruct({{\"{0}\", {1}, {2}, {3}}})", thing?.String_thing ?? "<null>", thing?.Byte_thing ?? 0, thing?.I32_thing ?? 0, thing?.I64_thing ?? 0);
+                return Task.FromResult(thing ?? new Xtruct());   // null returns are not allowed in Thrift
             }
 
-            public Task<Xtruct2> testNestAsync(Xtruct2 nest, CancellationToken cancellationToken)
+            public Task<Xtruct2> testNest(Xtruct2? nest, CancellationToken cancellationToken)
             {
-                var thing = nest.Struct_thing;
+                var thing = nest?.Struct_thing;
                 logger.Invoke("testNest({{{0}, {{\"{1}\", {2}, {3}, {4}, {5}}}}})",
-                    nest.Byte_thing,
-                    thing.String_thing,
-                    thing.Byte_thing,
-                    thing.I32_thing,
-                    thing.I64_thing,
-                    nest.I32_thing);
-                return Task.FromResult(nest);
+                    nest?.Byte_thing ?? 0,
+                    thing?.String_thing ?? "<null>",
+                    thing?.Byte_thing ?? 0,
+                    thing?.I32_thing ?? 0,
+                    thing?.I64_thing ?? 0,
+                    nest?.I32_thing ?? 0);
+                return Task.FromResult(nest ?? new Xtruct2());   // null returns are not allowed in Thrift
             }
 
-            public Task<Dictionary<int, int>> testMapAsync(Dictionary<int, int> thing, CancellationToken cancellationToken)
+            public Task<Dictionary<int, int>> testMap(Dictionary<int, int>? thing, CancellationToken cancellationToken)
             {
                 sb.Clear();
                 sb.Append("testMap({{");
-                var first = true;
-                foreach (var key in thing.Keys)
+                if (thing != null)
                 {
-                    if (first)
+                    var first = true;
+                    foreach (var key in thing.Keys)
                     {
-                        first = false;
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(", ");
+                        }
+                        sb.AppendFormat("{0} => {1}", key, thing[key]);
                     }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-                    sb.AppendFormat("{0} => {1}", key, thing[key]);
                 }
                 sb.Append("}})");
                 logger.Invoke(sb.ToString());
-                return Task.FromResult(thing);
+                return Task.FromResult(thing ?? new Dictionary<int, int>());   // null returns are not allowed in Thrift
             }
 
-            public Task<Dictionary<string, string>> testStringMapAsync(Dictionary<string, string> thing, CancellationToken cancellationToken)
+            public Task<Dictionary<string, string>> testStringMap(Dictionary<string, string>? thing, CancellationToken cancellationToken)
             {
                 sb.Clear();
                 sb.Append("testStringMap({{");
-                var first = true;
-                foreach (var key in thing.Keys)
+                if (thing != null)
                 {
-                    if (first)
+                    var first = true;
+                    foreach (var key in thing.Keys)
                     {
-                        first = false;
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(", ");
+                        }
+                        sb.AppendFormat("{0} => {1}", key, thing[key]);
                     }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-                    sb.AppendFormat("{0} => {1}", key, thing[key]);
                 }
                 sb.Append("}})");
                 logger.Invoke(sb.ToString());
-                return Task.FromResult(thing);
+                return Task.FromResult(thing ?? new Dictionary<string, string>());   // null returns are not allowed in Thrift
             }
 
-            public Task<THashSet<int>> testSetAsync(THashSet<int> thing, CancellationToken cancellationToken)
+            public Task<HashSet<int>> testSet(HashSet<int>? thing, CancellationToken cancellationToken)
             {
                 sb.Clear();
                 sb.Append("testSet({{");
-                var first = true;
-                foreach (int elem in thing)
+                if (thing != null)
                 {
-                    if (first)
+                    var first = true;
+                    foreach (int elem in thing)
                     {
-                        first = false;
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(", ");
+                        }
+                        sb.AppendFormat("{0}", elem);
                     }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-                    sb.AppendFormat("{0}", elem);
                 }
                 sb.Append("}})");
                 logger.Invoke(sb.ToString());
-                return Task.FromResult(thing);
+                return Task.FromResult(thing ?? new HashSet<int>());   // null returns are not allowed in Thrift
             }
 
-            public Task<List<int>> testListAsync(List<int> thing, CancellationToken cancellationToken)
+            public Task<List<int>> testList(List<int>? thing, CancellationToken cancellationToken)
             {
                 sb.Clear();
                 sb.Append("testList({{");
-                var first = true;
-                foreach (var elem in thing)
+                if (thing != null)
                 {
-                    if (first)
+                    var first = true;
+                    foreach (var elem in thing)
                     {
-                        first = false;
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(", ");
+                        }
+                        sb.AppendFormat("{0}", elem);
                     }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-                    sb.AppendFormat("{0}", elem);
                 }
                 sb.Append("}})");
                 logger.Invoke(sb.ToString());
-                return Task.FromResult(thing);
+                return Task.FromResult(thing ?? new List<int>());   // null returns are not allowed in Thrift
             }
 
-            public Task<Numberz> testEnumAsync(Numberz thing, CancellationToken cancellationToken)
+            public Task<Numberz> testEnum(Numberz thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testEnum({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<long> testTypedefAsync(long thing, CancellationToken cancellationToken)
+            public Task<long> testTypedef(long thing, CancellationToken cancellationToken)
             {
                 logger.Invoke("testTypedef({0})", thing);
                 return Task.FromResult(thing);
             }
 
-            public Task<Dictionary<int, Dictionary<int, int>>> testMapMapAsync(int hello, CancellationToken cancellationToken)
+            public Task<Dictionary<int, Dictionary<int, int>>> testMapMap(int hello, CancellationToken cancellationToken)
             {
                 logger.Invoke("testMapMap({0})", hello);
                 var mapmap = new Dictionary<int, Dictionary<int, int>>();
@@ -392,7 +421,7 @@ namespace ThriftTest
                 return Task.FromResult(mapmap);
             }
 
-            public Task<Dictionary<long, Dictionary<Numberz, Insanity>>> testInsanityAsync(Insanity argument, CancellationToken cancellationToken)
+            public Task<Dictionary<long, Dictionary<Numberz, Insanity>>> testInsanity(Insanity? argument, CancellationToken cancellationToken)
             {
                 logger.Invoke("testInsanity()");
 
@@ -411,8 +440,9 @@ namespace ThriftTest
                 var first_map = new Dictionary<Numberz, Insanity>();
                 var second_map = new Dictionary<Numberz, Insanity>(); ;
 
-                first_map[Numberz.TWO] = argument;
-                first_map[Numberz.THREE] = argument;
+                // null dict keys/values are not allowed in Thrift
+                first_map[Numberz.TWO] = argument ?? new Insanity();
+                first_map[Numberz.THREE] = argument ?? new Insanity();
 
                 second_map[Numberz.SIX] = new Insanity();
 
@@ -425,7 +455,7 @@ namespace ThriftTest
                 return Task.FromResult(insane);
             }
 
-            public Task<Xtruct> testMultiAsync(sbyte arg0, int arg1, long arg2, Dictionary<short, string> arg3, Numberz arg4, long arg5,
+            public Task<Xtruct> testMulti(sbyte arg0, int arg1, long arg2, Dictionary<short, string>? arg3, Numberz arg4, long arg5,
                 CancellationToken cancellationToken)
             {
                 logger.Invoke("testMulti()");
@@ -438,9 +468,9 @@ namespace ThriftTest
                 return Task.FromResult(hello);
             }
 
-            public Task testExceptionAsync(string arg, CancellationToken cancellationToken)
+            public Task testException(string? arg, CancellationToken cancellationToken)
             {
-                logger.Invoke("testException({0})", arg);
+                logger.Invoke("testException({0})", arg ?? "<null>");
                 if (arg == "Xception")
                 {
                     var x = new Xception
@@ -457,9 +487,9 @@ namespace ThriftTest
                 return Task.CompletedTask;
             }
 
-            public Task<Xtruct> testMultiExceptionAsync(string arg0, string arg1, CancellationToken cancellationToken)
+            public Task<Xtruct> testMultiException(string? arg0, string? arg1, CancellationToken cancellationToken)
             {
-                logger.Invoke("testMultiException({0}, {1})", arg0, arg1);
+                logger.Invoke("testMultiException({0}, {1})", arg0 ?? "<null>", arg1 ?? "<null>");
                 if (arg0 == "Xception")
                 {
                     var x = new Xception
@@ -484,13 +514,11 @@ namespace ThriftTest
                 return Task.FromResult(result);
             }
 
-            public Task testOnewayAsync(int secondsToSleep, CancellationToken cancellationToken)
+            public async Task testOneway(int secondsToSleep, CancellationToken cancellationToken)
             {
                 logger.Invoke("testOneway({0}), sleeping...", secondsToSleep);
-                Task.Delay(secondsToSleep * 1000, cancellationToken).GetAwaiter().GetResult();
+                await Task.Delay(secondsToSleep * 1000, cancellationToken);
                 logger.Invoke("testOneway finished");
-
-                return Task.CompletedTask;
             }
         }
 
@@ -506,7 +534,7 @@ namespace ThriftTest
                 "keys/",
             };
                         
-            string existingPath = null;
+            var existingPath = string.Empty;
             foreach (var possiblePath in possiblePaths)
             {
                 var path = Path.GetFullPath(possiblePath + serverCertName);
@@ -527,7 +555,7 @@ namespace ThriftTest
             return cert;
         }
 
-        public static int Execute(List<string> args)
+        public static async Task<int> Execute(List<string> args)
         {
             using (var loggerFactory = new LoggerFactory()) //.AddConsole().AddDebug();
             {
@@ -556,7 +584,7 @@ namespace ThriftTest
                     {
                         case TransportChoice.NamedPipe:
                             Debug.Assert(param.pipe != null);
-                            trans = new TNamedPipeServerTransport(param.pipe, Configuration);
+                            trans = new TNamedPipeServerTransport(param.pipe, Configuration, NamedPipeClientFlags.OnlyLocalClients);
                             break;
 
 
@@ -581,7 +609,7 @@ namespace ThriftTest
                     }
 
                     // Layered transport (mandatory)
-                    TTransportFactory transFactory = null;
+                    TTransportFactory? transFactory;
                     switch (param.buffering)
                     {
                         case BufferChoice.Framed:
@@ -609,23 +637,30 @@ namespace ThriftTest
                     var testProcessor = new ThriftTest.AsyncProcessor(testHandler);
                     var processorFactory = new TSingletonProcessorFactory(testProcessor);
 
-                    TServer serverEngine = new TSimpleAsyncServer(processorFactory, trans, transFactory, transFactory, proto, proto, logger);
+                    var poolconfig = new TThreadPoolAsyncServer.Configuration();  // use platform defaults
+                    TServer serverEngine = param.server switch
+                    {
+                        ServerChoice.Simple => new TSimpleAsyncServer(processorFactory, trans, transFactory, transFactory, proto, proto, logger),
+                        ServerChoice.ThreadPool => new TThreadPoolAsyncServer(processorFactory, trans, transFactory, transFactory, proto, proto, poolconfig, logger),
+                        _ => new TSimpleAsyncServer(processorFactory, trans, transFactory, transFactory, proto, proto, logger)
+                    };
 
                     //Server event handler
                     var serverEvents = new MyServerEventHandler();
                     serverEngine.SetEventHandler(serverEvents);
 
                     // Run it
-                    var where = (!string.IsNullOrEmpty(param.pipe)) ? "on pipe " + param.pipe : "on port " + param.port;
-                    Console.WriteLine("Starting the AsyncBaseServer " + where +
-                                      " with processor TPrototypeProcessorFactory prototype factory " +
+                    var where = (!string.IsNullOrEmpty(param.pipe)) ? "pipe " + param.pipe : "port " + param.port;
+                    Console.WriteLine("Running "+ serverEngine.GetType().Name +
+                                      " at "+ where +
+                                      " using "+ processorFactory.GetType().Name + " processor prototype factory " +
                                       (param.buffering == BufferChoice.Buffered ? " with buffered transport" : "") +
                                       (param.buffering == BufferChoice.Framed ? " with framed transport" : "") +
                                       (param.transport == TransportChoice.TlsSocket ? " with encryption" : "") +
                                       (param.protocol == ProtocolChoice.Compact ? " with compact protocol" : "") +
                                       (param.protocol == ProtocolChoice.Json ? " with json protocol" : "") +
                                       "...");
-                    serverEngine.ServeAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    await serverEngine.ServeAsync(CancellationToken.None);
                     Console.ReadLine();
                 }
                 catch (Exception x)

@@ -25,11 +25,6 @@ SUBDIRS += c_glib
 PRECROSS_TARGET += precross-c_glib
 endif
 
-if WITH_CL
-SUBDIRS += cl
-PRECROSS_TARGET += precross-cl
-endif
-
 if WITH_CPP
 SUBDIRS += cpp
 PRECROSS_TARGET += precross-cpp
@@ -62,10 +57,6 @@ endif
 if WITH_RUBY
 SUBDIRS += rb
 PRECROSS_TARGET += precross-rb
-endif
-
-if WITH_HASKELL
-SUBDIRS += hs
 endif
 
 if WITH_HAXE
@@ -124,7 +115,6 @@ dist-hook:
 EXTRA_DIST = \
 	audit \
 	c_glib \
-	cl \
 	cpp \
 	crossrunner \
 	dart \
@@ -142,6 +132,7 @@ EXTRA_DIST = \
 	rb \
 	rs \
 	threads \
+	partial \
 	AnnotationTest.thrift \
 	BrokenConstants.thrift \
 	ConstantsDemo.thrift \
@@ -155,10 +146,6 @@ EXTRA_DIST = \
 	Include.thrift \
 	Identifiers.thrift \
 	Int64Test.thrift \
-	JavaBeansTest.thrift \
-	JavaBinaryDefault.thrift \
-	JavaDeepCopyTest.thrift \
-	JavaTypes.thrift \
 	JsDeepConstructorTest.thrift \
 	ManyOptionals.thrift \
 	ManyTypedefs.thrift \
@@ -174,6 +161,9 @@ EXTRA_DIST = \
 	UnsafeTypes.thrift \
 	Service.thrift \
 	SpecificNameTest.thrift \
+	VoidMethExceptionsTest.thrift \
+	partial/thrift_test_schema.thrift \
+	keys/keygen/.gitignore \
 	known_failures_Linux.json \
 	test.py \
 	tests.json \

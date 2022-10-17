@@ -68,10 +68,7 @@ where
     /// Set `strict` to `true` if all incoming messages contain the protocol
     /// version number in the protocol header.
     pub fn new(transport: T, strict: bool) -> TBinaryInputProtocol<T> {
-        TBinaryInputProtocol {
-            strict,
-            transport,
-        }
+        TBinaryInputProtocol { strict, transport }
     }
 }
 
@@ -87,7 +84,7 @@ where
         // the thrift version header is intentionally negative
         // so the first check we'll do is see if the sign bit is set
         // and if so - assume it's the protocol-version header
-        if first_bytes[0] >= 8 {
+        if (first_bytes[0] & 0x80) != 0 {
             // apparently we got a protocol-version header - check
             // it, and if it matches, read the rest of the fields
             if first_bytes[0..2] != [0x80, 0x01] {
@@ -294,10 +291,7 @@ where
     /// Set `strict` to `true` if all outgoing messages should contain the
     /// protocol version number in the protocol header.
     pub fn new(transport: T, strict: bool) -> TBinaryOutputProtocol<T> {
-        TBinaryOutputProtocol {
-            strict,
-            transport,
-        }
+        TBinaryOutputProtocol { strict, transport }
     }
 }
 
@@ -453,7 +447,10 @@ impl TBinaryOutputProtocolFactory {
 }
 
 impl TOutputProtocolFactory for TBinaryOutputProtocolFactory {
-    fn create(&self, transport: Box<dyn TWriteTransport + Send>) -> Box<dyn TOutputProtocol + Send> {
+    fn create(
+        &self,
+        transport: Box<dyn TWriteTransport + Send>,
+    ) -> Box<dyn TOutputProtocol + Send> {
         Box::new(TBinaryOutputProtocol::new(transport, true))
     }
 }

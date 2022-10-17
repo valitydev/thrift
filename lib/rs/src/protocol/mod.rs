@@ -102,6 +102,14 @@ pub use self::compact::{
 pub use self::multiplexed::TMultiplexedOutputProtocol;
 pub use self::stored::TStoredInputProtocol;
 
+/// Reads and writes the struct to Thrift protocols.
+///
+/// It is implemented in generated code for Thrift `struct`, `union`, and `enum` types.
+pub trait TSerializable: Sized {
+    fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> crate::Result<Self>;
+    fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> crate::Result<()>;
+}
+
 // Default maximum depth to which `TInputProtocol::skip` will skip a Thrift
 // field. A default is necessary because Thrift structs or collections may
 // contain nested structs and collections, which could result in indefinite
@@ -577,14 +585,18 @@ where
 /// ```
 pub trait TOutputProtocolFactory {
     /// Create a `TOutputProtocol` that writes bytes to `transport`.
-    fn create(&self, transport: Box<dyn TWriteTransport + Send>) -> Box<dyn TOutputProtocol + Send>;
+    fn create(&self, transport: Box<dyn TWriteTransport + Send>)
+        -> Box<dyn TOutputProtocol + Send>;
 }
 
 impl<T> TOutputProtocolFactory for Box<T>
 where
     T: TOutputProtocolFactory + ?Sized,
 {
-    fn create(&self, transport: Box<dyn TWriteTransport + Send>) -> Box<dyn TOutputProtocol + Send> {
+    fn create(
+        &self,
+        transport: Box<dyn TWriteTransport + Send>,
+    ) -> Box<dyn TOutputProtocol + Send> {
         (**self).create(transport)
     }
 }
@@ -679,10 +691,7 @@ impl TListIdentifier {
     /// Create a `TListIdentifier` for a list with `size` elements of type
     /// `element_type`.
     pub fn new(element_type: TType, size: i32) -> TListIdentifier {
-        TListIdentifier {
-            element_type,
-            size,
-        }
+        TListIdentifier { element_type, size }
     }
 }
 
@@ -699,10 +708,7 @@ impl TSetIdentifier {
     /// Create a `TSetIdentifier` for a set with `size` elements of type
     /// `element_type`.
     pub fn new(element_type: TType, size: i32) -> TSetIdentifier {
-        TSetIdentifier {
-            element_type,
-            size,
-        }
+        TSetIdentifier { element_type, size }
     }
 }
 
@@ -878,7 +884,10 @@ pub fn verify_expected_service_call(expected: &str, actual: &str) -> crate::Resu
 /// `actual`.
 ///
 /// Return `()` if `actual == expected`, `Err` otherwise.
-pub fn verify_expected_message_type(expected: TMessageType, actual: TMessageType) -> crate::Result<()> {
+pub fn verify_expected_message_type(
+    expected: TMessageType,
+    actual: TMessageType,
+) -> crate::Result<()> {
     if expected == actual {
         Ok(())
     } else {
