@@ -14,7 +14,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.rbkmoney.woody.api.trace.context.TraceContext.getCurrentTraceData;
+import static dev.vality.woody.api.trace.context.TraceContext.getCurrentTraceData;
 
 public abstract class ProcessFunction<I, T extends TBase> {
   private final String methodName;
