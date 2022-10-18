@@ -41,8 +41,6 @@ import org.apache.thrift.transport.TTransportFactory;
 import org.apache.thrift.transport.TZlibTransport;
 import org.apache.thrift.transport.layered.TFastFramedTransport;
 import org.apache.thrift.transport.layered.TFramedTransport;
-import thrift.test.SecondService;
-import thrift.test.ThriftTest;
 
 public class TestServer {
 

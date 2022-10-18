@@ -148,7 +148,8 @@ public class TestTAsyncClientManager {
   public void testUnexpectedRemoteExceptionCall() throws Exception {
     new ErrorCallTest<SrvSrv.AsyncClient, Boolean>() {
       @Override
-      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Boolean> callback) throws Exception {
+      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Boolean> callback)
+          throws Exception {
         SrvSrv.AsyncClient client = getClient();
         client.declaredExceptionMethod(false, callback);
         return client;
@@ -166,7 +167,8 @@ public class TestTAsyncClientManager {
   public void testDeclaredRemoteExceptionCall() throws Exception {
     new ErrorCallTest<SrvSrv.AsyncClient, Boolean>() {
       @Override
-      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Boolean> callback) throws Exception {
+      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Boolean> callback)
+          throws Exception {
         SrvSrv.AsyncClient client = getClient();
         client.declaredExceptionMethod(true, callback);
         return client;
@@ -187,7 +189,8 @@ public class TestTAsyncClientManager {
   public void testTimeoutCall() throws Exception {
     new ErrorCallTest<SrvSrv.AsyncClient, Integer>() {
       @Override
-      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Integer> callback) throws Exception {
+      SrvSrv.AsyncClient executeErroringCall(AsyncMethodCallback<Integer> callback)
+          throws Exception {
         SrvSrv.AsyncClient client = getClient();
         client.setTimeout(100);
         client.primitiveMethod(callback);

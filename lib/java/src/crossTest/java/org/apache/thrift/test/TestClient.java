@@ -49,7 +49,6 @@ import org.apache.thrift.transport.layered.TFramedTransport;
 import thrift.test.Insanity;
 import thrift.test.Numberz;
 import thrift.test.SecondService;
-import thrift.test.ThriftTest;
 import thrift.test.Xception;
 import thrift.test.Xception2;
 import thrift.test.Xtruct;

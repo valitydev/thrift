@@ -5,16 +5,6 @@ import dev.vality.woody.api.interceptor.EmptyCommonInterceptor;
 import dev.vality.woody.api.trace.ContextUtils;
 import dev.vality.woody.api.trace.TraceData;
 import dev.vality.woody.api.trace.context.TraceContext;
-import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TIOStreamTransport;
-import org.apache.thrift.transport.TTransport;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,7 +16,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
@@ -44,19 +33,21 @@ public class TServlet extends HttpServlet {
 
   private final Collection<Map.Entry<String, String>> customHeaders;
 
-  private final CommonInterceptor defaultInterceptor = new EmptyCommonInterceptor() {
-    @Override
-    public boolean interceptResponse(TraceData traceData, Object providerContext, Object... contextParams) {
-      Throwable t = ContextUtils.getCallError(traceData.getServiceSpan());
-      if (t != null) {
-        ContextUtils.setInterceptionError(traceData.getServiceSpan(), t);
-        return false;
-      }
-      return true;
-    }
-  };
+  private final CommonInterceptor defaultInterceptor =
+      new EmptyCommonInterceptor() {
+        @Override
+        public boolean interceptResponse(
+            TraceData traceData, Object providerContext, Object... contextParams) {
+          Throwable t = ContextUtils.getCallError(traceData.getServiceSpan());
+          if (t != null) {
+            ContextUtils.setInterceptionError(traceData.getServiceSpan(), t);
+            return false;
+          }
+          return true;
+        }
+      };
 
-  private  CommonInterceptor interceptor;
+  private CommonInterceptor interceptor;
 
   /**
    * @see HttpServlet#HttpServlet()
@@ -77,8 +68,10 @@ public class TServlet extends HttpServlet {
   /**
    * @see HttpServlet#HttpServlet()
    */
-  public TServlet(TProcessor processor, TProtocolFactory inProtocolFactory,
-                   TProtocolFactory outProtocolFactory) {
+  public TServlet(
+      TProcessor processor,
+      TProtocolFactory inProtocolFactory,
+      TProtocolFactory outProtocolFactory) {
     this(processor, inProtocolFactory, outProtocolFactory, null);
   }
 
@@ -89,12 +82,14 @@ public class TServlet extends HttpServlet {
     this(processor, protocolFactory, protocolFactory);
   }
 
-  public TServlet(TProcessor processor, TProtocolFactory protocolFactory, CommonInterceptor interceptor) {
+  public TServlet(
+      TProcessor processor, TProtocolFactory protocolFactory, CommonInterceptor interceptor) {
     this(processor, protocolFactory, protocolFactory, interceptor);
   }
 
   @Override
-  protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  protected void service(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
     doPost(req, resp);
   }
 
@@ -103,42 +98,42 @@ public class TServlet extends HttpServlet {
    */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
+      throws ServletException, IOException {
 
     TraceData traceData = TraceContext.getCurrentTraceData();
     OutputStream out = null;
     try {
       InputStream in = request.getInputStream();
       out = response.getOutputStream();
-        response.setContentType("application/x-thrift");
-        if (!interceptor.interceptRequest(traceData, request, response)) {
-          ContextUtils.tryThrowInterceptionError(traceData.getServiceSpan());
+      response.setContentType("application/x-thrift");
+      if (!interceptor.interceptRequest(traceData, request, response)) {
+        ContextUtils.tryThrowInterceptionError(traceData.getServiceSpan());
+      }
+
+      if (null != this.customHeaders) {
+        for (Map.Entry<String, String> header : this.customHeaders) {
+          response.addHeader(header.getKey(), header.getValue());
         }
+      }
 
-        if (null != this.customHeaders) {
-          for (Map.Entry<String, String> header : this.customHeaders) {
-            response.addHeader(header.getKey(), header.getValue());
-          }
-        }
+      TTransport transport = new TIOStreamTransport(in, out);
 
-        TTransport transport = new TIOStreamTransport(in, out);
+      TProtocol inProtocol = inProtocolFactory.getProtocol(transport);
+      TProtocol outProtocol = outProtocolFactory.getProtocol(transport);
 
-        TProtocol inProtocol = inProtocolFactory.getProtocol(transport);
-        TProtocol outProtocol = outProtocolFactory.getProtocol(transport);
-
-        processor.process(inProtocol, outProtocol);
+      processor.process(inProtocol, outProtocol);
     } catch (Throwable te) {
       ContextUtils.setCallError(traceData.getServiceSpan(), te);
     } finally {
-        if (!interceptor.interceptResponse(traceData, response)) {
-            Throwable t = ContextUtils.getInterceptionError(traceData.getServiceSpan());
-            if (t != null) {
-                throw new ServletException(t);
-            }
+      if (!interceptor.interceptResponse(traceData, response)) {
+        Throwable t = ContextUtils.getInterceptionError(traceData.getServiceSpan());
+        if (t != null) {
+          throw new ServletException(t);
         }
-        if (out != null) {
-            out.flush();
-        }
+      }
+      if (out != null) {
+        out.flush();
+      }
     }
   }
 
@@ -146,7 +141,7 @@ public class TServlet extends HttpServlet {
    * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
    */
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
+      throws ServletException, IOException {
     doPost(request, response);
   }
 

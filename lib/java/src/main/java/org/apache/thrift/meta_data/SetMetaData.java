@@ -26,5 +26,4 @@ public class SetMetaData extends FieldValueMetaData {
     super(type);
     this.elemMetaData = eMetaData;
   }
-
 }

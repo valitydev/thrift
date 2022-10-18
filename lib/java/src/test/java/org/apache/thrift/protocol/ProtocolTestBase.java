@@ -43,7 +43,6 @@ import thrift.test.CompactProtoTestStruct;
 import thrift.test.HolyMoley;
 import thrift.test.Nesting;
 import thrift.test.OneOfEach;
-import thrift.test.Srv;
 import thrift.test.ThriftTest;
 
 public abstract class ProtocolTestBase {
