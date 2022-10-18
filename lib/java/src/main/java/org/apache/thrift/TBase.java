@@ -20,6 +20,7 @@
 package org.apache.thrift;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /** Generic base interface for generated Thrift objects. */
 public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
