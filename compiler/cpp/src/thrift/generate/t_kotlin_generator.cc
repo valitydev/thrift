@@ -154,8 +154,8 @@ private:
   void generate_struct_method_deep_copy(std::ostream& out, t_struct* tstruct);
   void generate_struct_method_compare_to(std::ostream& out, t_struct* tstruct);
   void generate_struct_method_field_for_id(std::ostream& out, t_struct* tstruct);
-  void generate_struct_method_get_fields(std::ostream& out);
-  void generate_struct_method_get_metadata(std::ostream& out);
+  void generate_struct_method_get_fields(std::ostream& out, t_struct* tstruct);
+  void generate_struct_method_get_metadata(std::ostream& out, t_struct* tstruct);
   void generate_struct_method_set_field_value(std::ostream& out, t_struct* tstruct);
   void generate_struct_method_get_field_value(std::ostream& out, t_struct* tstruct);
   void generate_struct_method_is_set(std::ostream& out, t_struct* tstruct);
@@ -632,13 +632,13 @@ void t_kotlin_generator::generate_field_value_meta_data(std::ostream& out, t_typ
   out << ")";
 }
 
-void t_kotlin_generator::generate_struct_method_get_fields(std::ostream& out) {
-  indent(out) << "override fun getFields(): Array<_Fields>" << endl;
+void t_kotlin_generator::generate_struct_method_get_fields(std::ostream& out, t_struct* tstruct) {
+  indent(out) << "override fun getFields(): Array<_Fields!>!" << endl;
   indent(out) << "  return _Fields.values();" << endl;
   indent(out) << "}" << endl << endl;
 }
 
-void t_kotlin_generator::generate_struct_method_get_metadata(std::ostream& out) {
+void t_kotlin_generator::generate_struct_method_get_metadata(std::ostream& out, t_struct* tstruct) {
   indent(out) << "override fun getMetadata(): Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> {" << endl;
   indent(out) << "  return metaData;" << endl;
   indent(out) << "}" << endl << endl;
@@ -1109,6 +1109,8 @@ void t_kotlin_generator::generate_union_definition(std::ostream& out,
   generate_struct_field_name_constants(out, tunion);
   generate_struct_companion_object(out, tunion);
   generate_struct_method_field_for_id(out, tunion);
+  generate_struct_method_get_fields(out, tunion);
+  generate_struct_method_get_metadata(out, tunion);
   generate_union_methods_definitions(out, tunion);
   generate_union_method_check_type(out, tunion);
   generate_union_standard_scheme(out, tunion);
@@ -1181,6 +1183,8 @@ void t_kotlin_generator::generate_struct_definition(std::ostream& out,
   generate_struct_standard_scheme(out, tstruct);
   generate_struct_method_compare_to(out, tstruct);
   generate_struct_method_field_for_id(out, tstruct);
+  generate_struct_method_get_fields(out, tstruct);
+  generate_struct_method_get_metadata(out, tstruct);
   generate_struct_method_get_field_value(out, tstruct);
   generate_struct_method_set_field_value(out, tstruct);
   generate_struct_method_is_set(out, tstruct);
