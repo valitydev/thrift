@@ -1936,11 +1936,6 @@ string t_kotlin_generator::inner_enum_type_name(t_type* ttype) {
   return "";
 }
 
-string t_kotlin_generator::make_kotlin_service_name_fix(t_service* tservice) {
-    string fixedName = tservice->get_name() + "Srv";
-    return fixedName;
-}
-
 bool t_kotlin_generator::is_enum_set(t_type* ttype) {
   ttype = get_true_type(ttype);
   if (ttype->is_set()) {
