@@ -24,5 +24,4 @@ public class ListMetaData extends CollectionMetaData {
   public ListMetaData(byte type, FieldValueMetaData eMetaData) {
     super(type, eMetaData);
   }
-
 }

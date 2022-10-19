@@ -19,10 +19,9 @@
 
 package org.apache.thrift;
 
-import org.apache.thrift.meta_data.FieldMetaData;
-
 import java.io.Serializable;
 import java.util.Map;
+import org.apache.thrift.meta_data.FieldMetaData;
 
 /** Generic base interface for generated Thrift objects. */
 public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>

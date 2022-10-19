@@ -88,7 +88,10 @@ public abstract class TServiceClient {
   }
 
   protected void receiveBase(TBase<?, ?> result, String methodName) throws TException {
-    if (TraceContext.getCurrentTraceData().getActiveSpan().getMetadata().containsKey(MetadataProperties.RESPONSE_SKIP_READING_FLAG)){
+    if (TraceContext.getCurrentTraceData()
+        .getActiveSpan()
+        .getMetadata()
+        .containsKey(MetadataProperties.RESPONSE_SKIP_READING_FLAG)) {
       return;
     }
     TMessage msg = iprot_.readMessageBegin();
@@ -108,5 +111,4 @@ public abstract class TServiceClient {
     result.read(iprot_);
     iprot_.readMessageEnd();
   }
-
 }
