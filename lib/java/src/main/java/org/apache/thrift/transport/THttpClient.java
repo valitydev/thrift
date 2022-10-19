@@ -139,8 +139,7 @@ public class THttpClient extends TEndpointTransport {
     }
   }
 
-  public THttpClient(TConfiguration config, String url, CommonInterceptor interceptor)
-      throws TTransportException {
+  public THttpClient(TConfiguration config, String url, CommonInterceptor interceptor) throws TTransportException {
     super(config);
     try {
       url_ = new URL(url);
@@ -185,18 +184,16 @@ public class THttpClient extends TEndpointTransport {
     }
   }
 
-  public THttpClient(
-      TConfiguration config, String url, HttpClient client, CommonInterceptor interceptor)
-      throws TTransportException {
+  public THttpClient(TConfiguration config, String url, HttpClient client, CommonInterceptor interceptor) throws TTransportException {
     super(config);
     try {
       url_ = new URL(url);
       this.client = client;
       this.host =
-          new HttpHost(
-              url_.getHost(),
-              -1 == url_.getPort() ? url_.getDefaultPort() : url_.getPort(),
-              url_.getProtocol());
+              new HttpHost(
+                      url_.getHost(),
+                      -1 == url_.getPort() ? url_.getDefaultPort() : url_.getPort(),
+                      url_.getProtocol());
       this.interceptor = interceptor == null ? new EmptyCommonInterceptor() : interceptor;
     } catch (IOException iox) {
       throw new TTransportException(iox);
@@ -207,8 +204,7 @@ public class THttpClient extends TEndpointTransport {
     this(url, client, null);
   }
 
-  public THttpClient(String url, HttpClient client, CommonInterceptor interceptor)
-      throws TTransportException {
+  public THttpClient(String url, HttpClient client, CommonInterceptor interceptor) throws TTransportException {
     super(new TConfiguration());
     try {
       url_ = new URL(url);
@@ -344,8 +340,7 @@ public class THttpClient extends TEndpointTransport {
 
   private void intercept(BooleanSupplier interception, String errMsg) throws TTransportException {
     if (!interception.getAsBoolean()) {
-      Throwable reqErr =
-          ContextUtils.getInterceptionError(TraceContext.getCurrentTraceData().getClientSpan());
+      Throwable reqErr = ContextUtils.getInterceptionError(TraceContext.getCurrentTraceData().getClientSpan());
       if (reqErr != null) {
         if (reqErr instanceof RuntimeException) {
           throw (RuntimeException) reqErr;
@@ -374,13 +369,10 @@ public class THttpClient extends TEndpointTransport {
         customHeaders_.forEach(post::addHeader);
       }
       TraceData traceData = TraceContext.getCurrentTraceData();
-      intercept(
-          () -> interceptor.interceptRequest(traceData, post, this.url_),
-          "Request interception error");
+      intercept(() -> interceptor.interceptRequest(traceData, post, this.url_), "Request interception error");
       post.setEntity(new ByteArrayEntity(data));
       HttpResponse response = this.client.execute(this.host, post);
-      intercept(
-          () -> interceptor.interceptResponse(traceData, response), "Response interception error");
+      intercept(() -> interceptor.interceptResponse(traceData, response), "Response interception error");
       handleResponse(response);
     } catch (IOException ioe) {
       // Abort method so the connection gets released back to the connection manager
@@ -468,17 +460,13 @@ public class THttpClient extends TEndpointTransport {
 
       TraceData traceData = TraceContext.getCurrentTraceData();
 
-      intercept(
-          () -> interceptor.interceptRequest(traceData, connection, url_),
-          "Request interception error");
+      intercept(() -> interceptor.interceptRequest(traceData, connection, url_), "Request interception error");
 
       connection.setDoOutput(true);
       connection.connect();
       connection.getOutputStream().write(data);
 
-      intercept(
-          () -> interceptor.interceptResponse(traceData, connection),
-          "Response interception error");
+      intercept(() -> interceptor.interceptResponse(traceData, connection), "Response interception error");
 
       // Read the responses
       inputStream_ = connection.getInputStream();

@@ -19,6 +19,8 @@
 
 package org.apache.thrift;
 
+import org.apache.thrift.meta_data.FieldMetaData;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -63,7 +65,7 @@ public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
    *
    * @return field meta data
    */
-  public Map<F, org.apache.thrift.meta_data.FieldMetaData> getFieldMetaData();
+  public Map<F, FieldMetaData> getFieldMetaData();
 
   /**
    * Set a field's value by field variable. Primitive types must be "boxed" in the appropriate

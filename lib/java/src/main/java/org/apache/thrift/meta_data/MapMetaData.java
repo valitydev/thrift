@@ -30,10 +30,10 @@ public class MapMetaData extends FieldValueMetaData {
   }
 
   public FieldValueMetaData getKeyMetaData() {
-    return keyMetaData;
+      return keyMetaData;
   }
 
   public FieldValueMetaData getValueMetaData() {
-    return valueMetaData;
+      return valueMetaData;
   }
 }
