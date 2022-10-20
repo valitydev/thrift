@@ -633,14 +633,14 @@ void t_kotlin_generator::generate_field_value_meta_data(std::ostream& out, t_typ
 }
 
 void t_kotlin_generator::generate_struct_method_get_fields(std::ostream& out) {
-  indent(out) << "override fun getFields(): Array<_Fields!>!" << endl;
+  indent(out) << "override fun getFields(): Array<_Fields> {" << endl;
   indent(out) << "  return _Fields.values();" << endl;
   indent(out) << "}" << endl << endl;
 }
 
 void t_kotlin_generator::generate_struct_method_get_metadata(std::ostream& out) {
-  indent(out) << "override fun getMetadata(): Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> {" << endl;
-  indent(out) << "  return metaData;" << endl;
+  indent(out) << "override fun getFieldMetaData(): Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> {" << endl;
+  indent(out) << "  return metadata;" << endl;
   indent(out) << "}" << endl << endl;
 }
 

@@ -140,7 +140,7 @@ jobs:
         with:
           name: libthrift
           if-no-files-found: error
-          path: ~/.m2/repository/dev/vality/thrift
+          path: ~/.m2/repository/org/apache/thrift
 
       - name: Run make check for java
         run: make -C lib/java check
