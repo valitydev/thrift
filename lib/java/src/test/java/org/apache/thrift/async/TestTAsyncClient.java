@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.thrift.TException;
 import org.junit.jupiter.api.Test;
-import thrift.test.Srv;
-import thrift.test.Srv.AsyncClient;
+import thrift.test.SrvSrv;
+import thrift.test.SrvSrv.AsyncClient;
 
 public class TestTAsyncClient {
   @Test
