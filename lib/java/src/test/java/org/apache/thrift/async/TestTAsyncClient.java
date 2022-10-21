@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.thrift.TException;
 import org.junit.jupiter.api.Test;
-import thrift.test.SrvSrv;
 import thrift.test.SrvSrv.AsyncClient;
 
 public class TestTAsyncClient {
@@ -18,7 +17,7 @@ public class TestTAsyncClient {
           }
         };
 
-    Srv.AsyncClient c = new AsyncClient(null, mockClientManager, null);
+    SrvSrv.AsyncClient c = new AsyncClient(null, mockClientManager, null);
     c.Janky(0, null);
     assertThrows(Exception.class, c::checkReady);
   }
