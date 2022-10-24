@@ -21,10 +21,10 @@ package org.apache.thrift.test.voidmethexceptions;
 
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
-import thrift.test.voidmethexceptions.TAppService01;
+import thrift.test.voidmethexceptions.TAppService01Srv;
 import thrift.test.voidmethexceptions.TExampleException;
 
-public class ServiceSyncImp extends ServiceBase implements TAppService01.Iface {
+public class ServiceSyncImp extends ServiceBase implements TAppService01Srv.Iface {
 
   @Override
   public String returnString(String msg, boolean throwException)

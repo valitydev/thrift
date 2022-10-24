@@ -36,7 +36,7 @@ import org.apache.thrift.transport.TestTSaslTransports;
 import org.apache.thrift.transport.TestTSaslTransports.TestSaslCallbackHandler;
 import org.apache.thrift.transport.sasl.TSaslNegotiationException;
 import org.junit.jupiter.api.Test;
-import thrift.test.ThriftTest;
+import thrift.test.ThriftTestSrv;
 
 public class TestSaslNonblockingServer extends TestTSaslTransports.TestTSaslTransportsWithServer {
 
@@ -78,7 +78,7 @@ public class TestSaslNonblockingServer extends TestTSaslTransports.TestTSaslTran
   @Test
   public void testBadPassword() throws Exception {
     TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
-    TProcessor processor = new ThriftTest.Processor<>(new TestHandler());
+    TProcessor processor = new ThriftTestSrv.Processor<>(new TestHandler());
     startServer(processor, protocolFactory);
 
     TSocket socket = new TSocket(HOST, PORT);

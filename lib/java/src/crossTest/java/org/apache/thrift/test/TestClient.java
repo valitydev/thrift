@@ -48,7 +48,8 @@ import org.apache.thrift.transport.layered.TFastFramedTransport;
 import org.apache.thrift.transport.layered.TFramedTransport;
 import thrift.test.Insanity;
 import thrift.test.Numberz;
-import thrift.test.SecondService;
+import thrift.test.SecondServiceSrv;
+import thrift.test.ThriftTestSrv;
 import thrift.test.Xception;
 import thrift.test.Xception2;
 import thrift.test.Xtruct;
@@ -252,7 +253,7 @@ public class TestClient {
 
         /** Multiplexed test */
         if (protocol_type.startsWith("multi")) {
-          SecondService.Client secondClient = new SecondService.Client(tProtocol2);
+          SecondServiceSrv.Client secondClient = new SecondServiceSrv.Client(tProtocol2);
           System.out.print("secondtestString(\"Test2\")");
           s = secondClient.secondtestString("Test2");
           System.out.print(" = \"" + s + "\"\n");
