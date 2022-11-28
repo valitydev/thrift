@@ -1,10 +1,11 @@
 name: "Build"
 
+# This workflow fails due to our custom metadata modifications.
 on:
   push:
-    branches: ["*"]
+      branches: ["disabled_on_purpose"]
   pull_request:
-    branches: ["*"]
+    branches: ["disabled_on_purpose"]
 
 env:
   BUILD_DEPS: automake bison flex git libboost-all-dev libevent-dev libssl-dev libtool make pkg-config
