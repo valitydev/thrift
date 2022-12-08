@@ -1,4 +1,4 @@
-Thrift Binary protocol encoding 
+Thrift Binary protocol encoding
 ===============================
 
 <!--
@@ -86,6 +86,15 @@ encode the int64 in 8 bytes in big endian order.
 ### Boolean encoding
 
 Values of `bool` type are first converted to an int8. True is converted to `1`, false to `0`.
+
+### Universal unique identifier encoding
+
+Values of `uuid` type are expected as 16-byte binary in big endian (or "network") order. Byte order conversion 
+might be necessary on certain platforms, e.g. Windows holds GUIDs in a complex record-like structure whose 
+memory layout differs.
+
+*Note*: Since the length is fixed, no `byte length` prefix is necessary and the field is always 16 bytes long.
+
 
 ## Message
 
@@ -182,16 +191,17 @@ Where:
 The following field-types are used:
 
 * `BOOL`, encoded as `2`
-* `BYTE`, encoded as `3`
+* `I8`, encoded as `3`
 * `DOUBLE`, encoded as `4`
 * `I16`, encoded as `6`
 * `I32`, encoded as `8`
 * `I64`, encoded as `10`
-* `STRING`, used for binary and string fields, encoded as `11`
+* `BINARY`, used for binary and string fields, encoded as `11`
 * `STRUCT`, used for structs and union fields, encoded as `12`
 * `MAP`, encoded as `13`
 * `SET`, encoded as `14`
 * `LIST`, encoded as `15`
+* `UUID`, encoded as `16`
 
 ## List and Set
 

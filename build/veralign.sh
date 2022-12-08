@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+x#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -59,19 +59,19 @@ FILES[contrib/thrift.spec]=simpleReplace
 FILES[contrib/zeromq/csharp/AssemblyInfo.cs]=simpleReplace
 FILES[contrib/thrift-maven-plugin/pom.xml]=pomReplace
 FILES[doc/specs/idl.md]=simpleReplace
-FILES[lib/as3/gradle.properties]=simpleReplace
 FILES[lib/d/src/thrift/base.d]=simpleReplace
 FILES[lib/dart/pubspec.yaml]=pubspecReplace
 FILES[lib/delphi/src/Thrift.pas]=simpleReplace
 FILES[lib/erl/src/thrift.app.src]=simpleReplace
 FILES[lib/haxe/haxelib.json]=simpleReplace
-FILES[lib/hs/thrift.cabal]=simpleReplace
 FILES[lib/java/gradle.properties]=simpleReplace
 FILES[lib/js/package-lock.json]=jsonReplace
 FILES[lib/js/package.json]=jsonReplace
 FILES[lib/js/src/thrift.js]=simpleReplace
 FILES[lib/lua/Thrift.lua]=simpleReplace
-FILES[lib/netstd/Thrift/Properties/AssemblyInfo.cs]=simpleReplace
+FILES[lib/netstd/Tests/Thrift.Tests/Thrift.Tests.csproj]=simpleReplace
+FILES[lib/netstd/Tests/Thrift.PublicInterfaces.Compile.Tests/Thrift.PublicInterfaces.Compile.Tests.csproj]=simpleReplace
+FILES[lib/netstd/Tests/Thrift.IntegrationTests/Thrift.IntegrationTests.csproj]=simpleReplace
 FILES[lib/netstd/Thrift/Properties/AssemblyInfo.cs]=simpleReplace
 FILES[lib/netstd/Thrift/Thrift.csproj]=simpleReplace
 FILES[lib/ocaml/_oasis]=simpleReplace
@@ -89,13 +89,17 @@ FILES[package.json]=jsonReplace
 FILES[sonar-project.properties]=simpleReplace
 FILES[test/dart/test_client/pubspec.yaml]=pubspecReplace
 FILES[test/erl/src/thrift_test.app.src]=simpleReplace
+FILES[test/netstd/Client/Client.csproj]=simpleReplace
+FILES[test/netstd/Server/Server.csproj]=simpleReplace
 FILES[Thrift.podspec]=simpleReplace
 FILES[tutorial/dart/client/pubspec.yaml]=pubspecReplace
 FILES[tutorial/dart/console_client/pubspec.yaml]=pubspecReplace
 FILES[tutorial/dart/server/pubspec.yaml]=pubspecReplace
 FILES[tutorial/delphi/DelphiClient/DelphiClient.dproj]=simpleReplace
 FILES[tutorial/delphi/DelphiServer/DelphiServer.dproj]=simpleReplace
-FILES[tutorial/hs/ThriftTutorial.cabal]=simpleReplace
+FILES[tutorial/netstd/Client/Client.csproj]=simpleReplace
+FILES[tutorial/netstd/Interfaces/Interfaces.csproj]=simpleReplace
+FILES[tutorial/netstd/Server/Server.csproj]=simpleReplace
 FILES[tutorial/ocaml/_oasis]=simpleReplace
 
 

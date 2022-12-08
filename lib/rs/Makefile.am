@@ -21,6 +21,7 @@ SUBDIRS = .
 
 if WITH_TESTS
 SUBDIRS += test
+SUBDIRS += test_recursive
 endif
 
 install:
@@ -31,9 +32,13 @@ install:
 	@echo '##############################################################'
 
 check-local:
+	$(CARGO) fmt --all -- --check
+	$(CARGO) clippy --all -- -D warnings
 	$(CARGO) test
 
 all-local:
+	$(CARGO) fmt --all -- --check
+	$(CARGO) clippy --all -- -D warnings
 	$(CARGO) build
 
 clean-local:

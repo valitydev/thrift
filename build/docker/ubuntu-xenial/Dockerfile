@@ -13,7 +13,7 @@
 #
 # Apache Thrift Docker build environment for Ubuntu Xenial
 # Using all stock Ubuntu Xenial packaging except for:
-# - d: does not come with Ubuntu so we're installing 2.075.1 for coverage
+# - d: does not come with Ubuntu so we're installing 2.087.0 for coverage
 # - dart: does not come with Ubuntu so we're installing 2.0.0-1 for coverage
 # - dotnet: does not come with Ubuntu
 # - go: Xenial comes with 1.6, but we need 1.10 or later
@@ -36,11 +36,6 @@ RUN apt-get update && \
       curl \
       software-properties-common \
       wget && \
-
-# D
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EBCF975E5BA24D5E && \
-    wget http://master.dl.sourceforge.net/project/d-apt/files/d-apt.list -O /etc/apt/sources.list.d/d-apt.list && \
-    wget -qO - https://dlang.org/d-keyring.gpg | apt-key add - && \
 
 # Dart
     curl https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
@@ -79,6 +74,8 @@ ENV PATH /usr/lib/llvm-3.8/bin:$PATH
 
 ### languages
 
+# TODO: "apt-get install" without "apt-get update" in the same "RUN" step can cause cache issues if modified later.
+# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
 RUN apt-get install -y --no-install-recommends \
 `# C++ dependencies` \
       libboost-dev \
@@ -93,28 +90,24 @@ RUN apt-get install -y --no-install-recommends \
       qtbase5-dev \
       qtbase5-dev-tools
 
-ENV D_VERSION 2.075.1-0
-RUN apt-get install -y --allow-unauthenticated --no-install-recommends \
+ENV D_VERSION     2.087.0
+ENV DMD_DEB       dmd_2.087.0-0_amd64.deb
+RUN \
 `# D dependencies` \
-      dmd-bin=$D_VERSION \
-      libphobos2-dev=$D_VERSION \
-      dub=1.6.0-0 \
-      dfmt \
-      dscanner \
-      libevent-dev \
-      libssl-dev \
-      xdg-utils
-RUN mkdir -p /usr/include/dmd/druntime/import/deimos /usr/include/dmd/druntime/import/C && \
-    curl -sSL https://github.com/D-Programming-Deimos/libevent/archive/master.tar.gz| tar xz && \
-    mv libevent-master/deimos/* /usr/include/dmd/druntime/import/deimos/ && \
-    mv libevent-master/C/* /usr/include/dmd/druntime/import/C/ && \
-    rm -rf libevent-master
-RUN curl -sSL https://github.com/D-Programming-Deimos/openssl/archive/v1.1.6+1.0.1g.tar.gz | tar xz && \
-    mv openssl-1.1.6-1.0.1g/deimos/* /usr/include/dmd/druntime/import/deimos/ && \
-    mv openssl-1.1.6-1.0.1g/C/* /usr/include/dmd/druntime/import/C/ && \
-    rm -rf openssl-1.1.6-1.0.1g
+    wget -q http://downloads.dlang.org/releases/2.x/${D_VERSION}/${DMD_DEB} && \
+    dpkg --install ${DMD_DEB} && \
+    rm -f ${DMD_DEB} && \
+    mkdir -p /usr/include/dmd/druntime/import/deimos /usr/include/dmd/druntime/import/C && \
+    git clone -b 'v2.0.2+2.0.16' https://github.com/D-Programming-Deimos/libevent.git deimos-libevent-2.0 && \
+    mv deimos-libevent-2.0/deimos/* /usr/include/dmd/druntime/import/deimos/ && \
+    mv deimos-libevent-2.0/C/* /usr/include/dmd/druntime/import/C/ && \
+    rm -rf deimos-libevent-2.0 && \
+    git clone -b 'v1.1.6+1.0.1g' https://github.com/D-Programming-Deimos/openssl.git deimos-openssl-1.0.1g && \
+    mv deimos-openssl-1.0.1g/deimos/* /usr/include/dmd/druntime/import/deimos/ && \
+    mv deimos-openssl-1.0.1g/C/* /usr/include/dmd/druntime/import/C/ && \
+    rm -rf deimos-openssl-1.0.1g
 
-ENV DART_VERSION 2.0.0-1
+ENV DART_VERSION 2.7.2-1
 RUN apt-get install -y --no-install-recommends \
 `# Dart dependencies` \
       dart=$DART_VERSION
@@ -122,41 +115,35 @@ ENV PATH /usr/lib/dart/bin:$PATH
 
 RUN apt-get install -y --no-install-recommends \
 `# dotnet core dependencies` \
-      dotnet-sdk-3.1
+      dotnet-sdk-6.0 \
+      dotnet-runtime-6.0 \
+      aspnetcore-runtime-6.0 \
+      dotnet-apphost-pack-6.0
 
-RUN apt-get install -y --no-install-recommends \
-`# Erlang dependencies` \
-      erlang-base \
-      erlang-eunit \
-      erlang-dev \
-      erlang-tools \
-      rebar
+# Erlang dependencies
+ARG ERLANG_OTP_VERSION=18.3.4.11
+ARG ERLANG_REBAR_VERSION=3.13.2
+RUN apt-get update && apt-get install -y --no-install-recommends automake libncurses5-dev && \
+    curl https://raw.githubusercontent.com/kerl/kerl/master/kerl -o /usr/local/bin/kerl && chmod +x /usr/local/bin/kerl && \
+    kerl build $ERLANG_OTP_VERSION && kerl install $ERLANG_OTP_VERSION /usr/local/lib/otp/ && . /usr/local/lib/otp/activate && \
+    curl https://s3.amazonaws.com/rebar3/rebar3 -o /usr/local/bin/rebar3 && chmod +x /usr/local/bin/rebar3 && \
+    curl -ssLo /usr/local/bin/rebar3 https://github.com/erlang/rebar3/releases/download/${ERLANG_REBAR_VERSION}/rebar3 && chmod +x /usr/local/bin/rebar3 && \
+    rebar3 --version
+ENV PATH /usr/local/lib/otp/bin:$PATH
 
 RUN apt-get install -y --no-install-recommends \
 `# GlibC dependencies` \
       libglib2.0-dev
 
 # golang
-ENV GOLANG_VERSION 1.14.14
-ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 6f1354c9040d65d1622b451f43c324c1e5197aa9242d00c5a117d0e2625f3e0d
+ENV GOLANG_VERSION 1.18.5
+ENV GOLANG_DOWNLOAD_URL https://go.dev/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+ENV GOLANG_DOWNLOAD_SHA256 9e5de37f9c49942c601b191ac5fba404b868bfc21d446d6960acc12283d6e5f2
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz && \
       echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - && \
       tar -C /usr/local -xzf golang.tar.gz && \
       ln -s /usr/local/go/bin/go /usr/local/bin && \
       rm golang.tar.gz
-
-# cabal 1.22 in xenial is too old so we grab a pre-built 1.24 binary
-RUN apt-get install -y --no-install-recommends \
-`# Haskell dependencies` \
-      ghc && \
-    cd /tmp && \
-    wget -q https://www.haskell.org/cabal/release/cabal-install-1.24.0.2/cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz && \
-    tar xzf cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz && \
-    find dist-newstyle/ -type f -name cabal -exec mv {} /usr/bin \; && \
-    rm -rf /tmp/cabal* && \
-    cabal --version && \
-    cabal update
 
 RUN apt-get install -y --no-install-recommends \
 `# Haxe dependencies` \
@@ -168,12 +155,20 @@ RUN apt-get install -y --no-install-recommends \
     haxelib install --always hxcpp 3.4.64 2>&1 > /dev/null
 # note: hxcpp 3.4.185 (latest) no longer ships static libraries, and caused a build failure
 
+ENV GRADLE_VERSION="7.4.2"
 RUN apt-get install -y --no-install-recommends \
 `# Java dependencies` \
       ant \
       ant-optional \
       openjdk-8-jdk \
-      maven
+      maven \
+      unzip && \
+`# Gradle` \
+      wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip -q -O /tmp/gradle-$GRADLE_VERSION-bin.zip && \
+      (echo "29e49b10984e585d8118b7d0bc452f944e386458df27371b49b4ac1dec4b7fda  /tmp/gradle-$GRADLE_VERSION-bin.zip" | sha256sum -c -) && \
+      unzip -d /tmp /tmp/gradle-$GRADLE_VERSION-bin.zip && \
+      mv /tmp/gradle-$GRADLE_VERSION /usr/local/gradle && \
+      ln -s /usr/local/gradle/bin/gradle /usr/local/bin
 
 # disabled: same as ubuntu-bionic jobs
 # RUN apt-get install -y --no-install-recommends \
@@ -191,6 +186,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get install -y --no-install-recommends \
 `# JS dependencies` \
       libxss1 \
+      libxtst6 \
       libatk-bridge2.0-0 \
       libgtk-3-0
 
@@ -255,11 +251,20 @@ RUN apt-get install -y --no-install-recommends \
 # Rust dependencies
 RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.40.0 -y
 
-# Clean up
-RUN rm -rf /var/cache/apt/* && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/* && \
-    rm -rf /var/tmp/*
+# Locale(s) for cpp unit tests
+RUN apt-get install -y --no-install-recommends \
+`# Locale dependencies` \
+      locales && \
+    locale-gen en_US.UTF-8 && \
+    locale-gen de_DE.UTF-8 && \
+    update-locale
+
+# NOTE: this does not reduce the image size but adds an additional layer.
+# # Clean up
+# RUN rm -rf /var/cache/apt/* && \
+#     rm -rf /var/lib/apt/lists/* && \
+#     rm -rf /tmp/* && \
+#     rm -rf /var/tmp/*
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 ENV THRIFT_ROOT /thrift

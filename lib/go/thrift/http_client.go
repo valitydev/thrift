@@ -24,7 +24,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,13 +35,11 @@ import (
 var DefaultHttpClient *http.Client = http.DefaultClient
 
 type THttpClient struct {
-	client             *http.Client
-	response           *http.Response
-	url                *url.URL
-	requestBuffer      *bytes.Buffer
-	header             http.Header
-	nsecConnectTimeout int64
-	nsecReadTimeout    int64
+	client        *http.Client
+	response      *http.Response
+	url           *url.URL
+	requestBuffer *bytes.Buffer
+	header        http.Header
 }
 
 type THttpClientTransportFactory struct {
@@ -138,7 +135,7 @@ func (p *THttpClient) closeResponse() error {
 		// reused. Errors are being ignored here because if the connection is invalid
 		// and this fails for some reason, the Close() method will do any remaining
 		// cleanup.
-		io.Copy(ioutil.Discard, p.response.Body)
+		io.Copy(io.Discard, p.response.Body)
 
 		err = p.response.Body.Close()
 	}
