@@ -16,7 +16,7 @@ jobs:
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-amd64.tar.gz
-            install-deps: sudo apt install -yq automake bison flex cmake
+            install-deps: sudo apt update && sudo apt install -yq automake bison flex cmake
             build-command: make
             cmake-parameters: -DSTATIC=ON
           - platform: Macos ARM64
@@ -30,7 +30,7 @@ jobs:
             os: ubuntu-latest
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-arm64.tar.gz
-            install-deps: sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
+            install-deps: sudo apt update && sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
             build-command: make
             cmake-parameters: -DSTATIC=ON -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/build/cmake/Linux-ARM64.cmake"
 
