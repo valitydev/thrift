@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - platform: Linux x86_64
-            os: ubuntu-latest
+            os: ubuntu-20.04
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-amd64.tar.gz
             install-deps: sudo apt update && sudo apt install -yq automake bison flex cmake
@@ -27,7 +27,7 @@ jobs:
             build-command: cmake --build .
             cmake-parameters: -G "Xcode"
           - platform: Linux ARM64
-            os: ubuntu-latest
+            os: ubuntu-20.04
             artifact-path: compiler/cpp/cmake-build/bin
             asset-name: thrift-${{ github.ref_name }}-linux-arm64.tar.gz
             install-deps: sudo apt update && sudo apt install -yq automake bison flex cmake g++-aarch64-linux-gnu
