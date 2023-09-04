@@ -24,7 +24,6 @@ import dev.vality.woody.api.interceptor.EmptyCommonInterceptor;
 import dev.vality.woody.api.trace.ContextUtils;
 import dev.vality.woody.api.trace.TraceData;
 import dev.vality.woody.api.trace.context.TraceContext;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +38,7 @@ import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.util.Timeout;
@@ -396,10 +395,9 @@ public class THttpClient extends TEndpointTransport {
           () -> interceptor.interceptRequest(traceData, post, this.url_),
           "Request interception error");
       post.setEntity(new ByteArrayEntity(data, null));
-      HttpResponse response = this.client.execute(this.host, post, new THttpClientResponseHandler());
+      InputStream response = this.client.execute(this.host, post, new THttpClientResponseHandler());
       intercept(
           () -> interceptor.interceptResponse(traceData, response), "Response interception error");
-      handleResponse(response);
     } catch (IOException ioe) {
       // Abort method so the connection gets released back to the connection manager
       post.abort();
