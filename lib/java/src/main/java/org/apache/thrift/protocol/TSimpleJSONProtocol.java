@@ -22,6 +22,7 @@ package org.apache.thrift.protocol;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Stack;
+import java.util.UUID;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
@@ -36,6 +37,7 @@ public class TSimpleJSONProtocol extends TProtocol {
 
   /** Factory */
   public static class Factory implements TProtocolFactory {
+    @Override
     public TProtocol getProtocol(TTransport trans) {
       return new TSimpleJSONProtocol(trans);
     }
@@ -48,18 +50,11 @@ public class TSimpleJSONProtocol extends TProtocol {
   private static final byte[] LBRACKET = new byte[] {'['};
   private static final byte[] RBRACKET = new byte[] {']'};
   private static final char QUOTE = '"';
-
-  private static final TStruct ANONYMOUS_STRUCT = new TStruct();
-  private static final TField ANONYMOUS_FIELD = new TField();
-  private static final TMessage EMPTY_MESSAGE = new TMessage();
-  private static final TSet EMPTY_SET = new TSet();
-  private static final TList EMPTY_LIST = new TList();
-  private static final TMap EMPTY_MAP = new TMap();
   private static final String LIST = "list";
   private static final String SET = "set";
   private static final String MAP = "map";
 
-  protected class Context {
+  protected static class Context {
     protected void write() throws TException {}
 
     /** Returns whether the current value is a key in a map */
@@ -277,6 +272,11 @@ public class TSimpleJSONProtocol extends TProtocol {
   }
 
   @Override
+  public void writeUuid(UUID uuid) throws TException {
+    writeString(uuid.toString());
+  }
+
+  @Override
   public void writeDouble(double dub) throws TException {
     if (writeContext_.isMapKey()) {
       writeString(Double.toString(dub));
@@ -354,8 +354,8 @@ public class TSimpleJSONProtocol extends TProtocol {
   /**
    * Reading methods.
    *
-   * <p>simplejson is not meant to be read back into thrift - see
-   * http://wiki.apache.org/thrift/ThriftUsageJava - use JSON instead
+   * <p>simplejson is not meant to be read back into thrift - see <a
+   * href="http://wiki.apache.org/thrift/ThriftUsageJava">ThriftUsageJava</a> - use JSON instead
    */
   @Override
   public TMessage readMessageBegin() throws TException {
@@ -439,6 +439,11 @@ public class TSimpleJSONProtocol extends TProtocol {
 
   @Override
   public long readI64() throws TException {
+    throw new TException("Not implemented");
+  }
+
+  @Override
+  public UUID readUuid() throws TException {
     throw new TException("Not implemented");
   }
 

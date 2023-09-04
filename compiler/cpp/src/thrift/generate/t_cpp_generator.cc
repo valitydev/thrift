@@ -104,6 +104,7 @@ public:
 
   void init_generator() override;
   void close_generator() override;
+  std::string display_name() const override;
 
   void generate_consts(std::vector<t_const*> consts) override;
 
@@ -689,7 +690,7 @@ void t_cpp_generator::generate_enum_to_string_helper_function(std::ostream& out,
       out << tenum->get_name() << "::type&";
     }
     out << " val) " ;
-	scope_up(out);
+    scope_up(out);
 
     out << indent() << "std::map<int, const char*>::const_iterator it = _"
              << tenum->get_name() << "_VALUES_TO_NAMES.find(val);" << endl;
@@ -1221,7 +1222,7 @@ void t_cpp_generator::generate_struct_declaration(ostream& out,
 
   // Declare all fields
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-	generate_java_doc(out, *m_iter);
+    generate_java_doc(out, *m_iter);
     indent(out) << declare_field(*m_iter,
                                  false,
                                  (pointers && !(*m_iter)->get_type()->is_xception()),
@@ -2475,11 +2476,11 @@ void t_cpp_generator::generate_service_client(t_service* tservice, string style)
   indent_up();
   if (style != "Cob") {
     f_header_ << indent() << service_name_ << style << "Client" << short_suffix << "(" << prot_ptr
-		<< " prot";
-	if (style == "Concurrent") {
-		f_header_ << ", std::shared_ptr< ::apache::thrift::async::TConcurrentClientSyncInfo> sync";
-	}
-	f_header_ << ") ";
+        << " prot";
+    if (style == "Concurrent") {
+        f_header_ << ", std::shared_ptr< ::apache::thrift::async::TConcurrentClientSyncInfo> sync";
+    }
+    f_header_ << ") ";
 
     if (extends.empty()) {
       if (style == "Concurrent") {
@@ -2498,12 +2499,12 @@ void t_cpp_generator::generate_service_client(t_service* tservice, string style)
     }
 
     f_header_ << indent() << service_name_ << style << "Client" << short_suffix << "(" << prot_ptr
-		<< " iprot, " << prot_ptr << " oprot";
-	if (style == "Concurrent") {
-		f_header_ << ", std::shared_ptr< ::apache::thrift::async::TConcurrentClientSyncInfo> sync";
-	}
-	f_header_ << ") ";
-	
+        << " iprot, " << prot_ptr << " oprot";
+    if (style == "Concurrent") {
+        f_header_ << ", std::shared_ptr< ::apache::thrift::async::TConcurrentClientSyncInfo> sync";
+    }
+    f_header_ << ") ";
+    
     if (extends.empty()) {
       if (style == "Concurrent") {
         f_header_ << ": sync_(sync)" << endl;
@@ -4398,9 +4399,9 @@ string t_cpp_generator::namespace_close(string ns) {
 string t_cpp_generator::type_name(t_type* ttype, bool in_typedef, bool arg) {
   if (ttype->is_base_type()) {
     string bname = base_type_name(((t_base_type*)ttype)->get_base());
-    std::map<string, string>::iterator it = ttype->annotations_.find("cpp.type");
-    if (it != ttype->annotations_.end()) {
-      bname = it->second;
+    std::map<string, std::vector<string>>::iterator it = ttype->annotations_.find("cpp.type");
+    if (it != ttype->annotations_.end() && !it->second.empty()) {
+      bname = it->second.back();
     }
 
     if (!arg) {
@@ -4660,6 +4661,8 @@ string t_cpp_generator::type_to_enum(t_type* type) {
       return "::apache::thrift::protocol::T_I64";
     case t_base_type::TYPE_DOUBLE:
       return "::apache::thrift::protocol::T_DOUBLE";
+    default:
+      break;
     }
   } else if (type->is_enum()) {
     return "::apache::thrift::protocol::T_I32";
@@ -4748,6 +4751,11 @@ string t_cpp_generator::get_legal_program_name(std::string program_name)
 
   return program_name;
 }
+
+std::string t_cpp_generator::display_name() const {
+  return "C++";
+}
+
 
 THRIFT_REGISTER_GENERATOR(
     cpp,

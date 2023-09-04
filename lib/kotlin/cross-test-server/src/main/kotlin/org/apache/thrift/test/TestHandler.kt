@@ -19,6 +19,8 @@
 package org.apache.thrift.test
 
 import java.nio.ByteBuffer
+import java.util.*
+import kotlin.collections.HashMap
 import kotlinx.coroutines.delay
 import org.apache.thrift.TException
 import org.slf4j.Logger
@@ -85,6 +87,11 @@ class TestHandler : ThriftTest {
         logger.info("testBinary($sb)\n")
         buffer.reset()
         return buffer.array()
+    }
+
+    override suspend fun testUuid(thing: UUID): UUID {
+        logger.info("testUuid($thing)\n")
+        return thing
     }
 
     override suspend fun testStruct(thing: Xtruct): Xtruct {
@@ -176,7 +183,11 @@ class TestHandler : ThriftTest {
         val secondMap = mutableMapOf<Numberz, Insanity>()
         firstMap[Numberz.TWO] = argument
         firstMap[Numberz.THREE] = argument
-        val looney = Insanity()
+        val looney =
+            Insanity().apply {
+                userMap = HashMap()
+                xtructs = listOf()
+            }
         secondMap[Numberz.SIX] = looney
         val insane: MutableMap<Long, Map<Numberz, Insanity>> = HashMap()
         insane[1L] = firstMap
@@ -234,11 +245,20 @@ class TestHandler : ThriftTest {
         } else if (arg0 == "Xception2") {
             val x = Xception2()
             x.errorCode = 2002
-            x.struct_thing = Xtruct().apply { string_thing = "This is an Xception2" }
+            x.struct_thing =
+                Xtruct().apply {
+                    string_thing = "This is an Xception2"
+                    byte_thing = 0
+                    i32_thing = 0
+                    i64_thing = 0
+                }
             throw x
         }
         val result = Xtruct()
         result.string_thing = arg1
+        result.byte_thing = 0
+        result.i32_thing = 0
+        result.i64_thing = 0
         return result
     }
 

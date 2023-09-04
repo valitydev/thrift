@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -54,7 +55,7 @@ var ServerStopTimeout = time.Duration(0)
  * This will work if golang user implements a conn-pool like thing in client side.
  */
 type TSimpleServer struct {
-	closed   int32
+	closed   atomic.Int32
 	wg       sync.WaitGroup
 	mu       sync.Mutex
 	stopChan chan struct{}
@@ -186,7 +187,7 @@ func (p *TSimpleServer) innerAccept() (int32, error) {
 	client, err := p.serverTransport.Accept()
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	closed := atomic.LoadInt32(&p.closed)
+	closed := p.closed.Load()
 	if closed != 0 {
 		return closed, nil
 	}
@@ -246,10 +247,10 @@ func (p *TSimpleServer) Stop() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if atomic.LoadInt32(&p.closed) != 0 {
+	if !p.closed.CompareAndSwap(0, 1) {
+		// Already closed
 		return nil
 	}
-	atomic.StoreInt32(&p.closed, 1)
 	p.serverTransport.Interrupt()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -328,7 +329,7 @@ func (p *TSimpleServer) processRequests(client TTransport) (err error) {
 		defer outputTransport.Close()
 	}
 	for {
-		if atomic.LoadInt32(&p.closed) != 0 {
+		if p.closed.Load() != 0 {
 			return nil
 		}
 
@@ -354,7 +355,13 @@ func (p *TSimpleServer) processRequests(client TTransport) (err error) {
 
 		ok, err := processor.Process(ctx, inputProtocol, outputProtocol)
 		if errors.Is(err, ErrAbandonRequest) {
-			return client.Close()
+			err := client.Close()
+			if errors.Is(err, net.ErrClosed) {
+				// In this case, it's kinda expected to get
+				// net.ErrClosed, treat that as no-error
+				return nil
+			}
+			return err
 		}
 		if errors.As(err, new(TTransportException)) && err != nil {
 			return err

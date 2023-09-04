@@ -46,6 +46,8 @@ add_library(parse STATIC ${parse_SOURCES})
 set(compiler_core
     src/thrift/common.cc
     src/thrift/generate/t_generator.cc
+    src/thrift/generate/validator_parser.cc
+    src/thrift/generate/validator_parser.h
     src/thrift/parse/t_typedef.cc
     src/thrift/parse/parse.cc
     src/thrift/version.h
@@ -71,8 +73,21 @@ macro(THRIFT_ADD_COMPILER name description initial)
     endif()
 endmacro()
 
+# This macro adds an option THRIFT_VALIDATOR_COMPILER_${NAME}
+# that allows enabling or disabling certain languages' validator
+macro(THRIFT_ADD_VALIDATOR_COMPILER name description initial)
+    string(TOUPPER "THRIFT_COMPILER_${name}" enabler)
+    set(src "src/thrift/generate/${name}_validator_generator.cc")
+    list(APPEND "src/thrift/generate/${name}_validator_generator.h")
+    option(${enabler} ${description} ${initial})
+    if(${enabler})
+        list(APPEND thrift-compiler_SOURCES ${src})
+    endif()
+endmacro()
+
 # The following compiler can be enabled or disabled
 THRIFT_ADD_COMPILER(c_glib  "Enable compiler for C with Glib" ON)
+THRIFT_ADD_COMPILER(cl            "Enable compiler for Common LISP" ON)
 THRIFT_ADD_COMPILER(cpp     "Enable compiler for C++" ON)
 THRIFT_ADD_COMPILER(d       "Enable compiler for D" ON)
 THRIFT_ADD_COMPILER(dart    "Enable compiler for Dart" ON)
@@ -101,6 +116,9 @@ THRIFT_ADD_COMPILER(st      "Enable compiler for Smalltalk" ON)
 THRIFT_ADD_COMPILER(swift   "Enable compiler for Cocoa Swift" ON)
 THRIFT_ADD_COMPILER(xml     "Enable compiler for XML" ON)
 THRIFT_ADD_COMPILER(xsd     "Enable compiler for XSD" ON)
+
+# The following compiler can be enabled or disabled by enabling or disabling certain languages
+THRIFT_ADD_VALIDATOR_COMPILER(go           "Enable validator compiler for Go" ON)
 
 option(STATIC "Enable static linking of core libraries (libgcc / libstdc++)")
 
