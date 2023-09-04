@@ -154,6 +154,7 @@ public:
    */
   void init_generator();
   void close_generator();
+  std::string display_name() const override;
 
   /**
    * Program-level generation functions
@@ -1366,6 +1367,8 @@ string t_erlang_generator::type_to_enum(t_type* type) {
       return "?tType_I64";
     case t_base_type::TYPE_DOUBLE:
       return "?tType_DOUBLE";
+    default:
+      break;
     }
   } else if (type->is_enum()) {
     return "?tType_I32";
@@ -1409,6 +1412,8 @@ std::string t_erlang_generator::render_type_term(t_type* type,
       return "i64";
     case t_base_type::TYPE_DOUBLE:
       return "double";
+    default:
+      break;
     }
   } else if (type->is_enum()) {
     return "{enum, {" + type_module(type) + ", " + type_name(type) + "}}";
@@ -1552,6 +1557,10 @@ string t_erlang_generator::erl_autogen_comment() {
     "%% DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING\n"
     "%%\n"
   );
+}
+
+std::string t_erlang_generator::display_name() const {
+  return "Erlang";
 }
 
 THRIFT_REGISTER_GENERATOR(

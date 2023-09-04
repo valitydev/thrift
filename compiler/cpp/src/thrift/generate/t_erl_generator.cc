@@ -1282,7 +1282,7 @@ std::string t_erl_generator::type_module(t_type* ttype) {
 }
 
 std::string t_erl_generator::display_name() const {
-  return "Erlang";
+  return "Erl";
 }
 
 

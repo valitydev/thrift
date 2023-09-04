@@ -3054,7 +3054,6 @@ void t_java_generator::generate_metadata_for_field_annotations(std::ostream& out
 }
 
 void t_java_generator::generate_field_value_meta_data(std::ostream& out, t_type* type) {
-  t_type* ttype = get_true_type(type);
   out << endl;
   indent_up();
   indent_up();
