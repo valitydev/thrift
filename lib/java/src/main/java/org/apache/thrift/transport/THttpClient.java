@@ -405,7 +405,7 @@ public class THttpClient extends TEndpointTransport {
           () -> interceptor.interceptRequest(traceData, post, this.url_),
           "Request interception error");
       post.setEntity(new ByteArrayEntity(data, null));
-      ClassicHttpResponse response = this.client.execute(this.host, post);
+      ClassicHttpResponse response = this.client.executeOpen(this.host, post, null);
       intercept(
           () -> interceptor.interceptResponse(traceData, response), "Response interception error");
       handleResponse(response);
