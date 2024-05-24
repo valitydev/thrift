@@ -68,6 +68,7 @@ public:
 
   void init_generator() override;
   void close_generator() override;
+  std::string display_name() const override;
 
   /**
    * Program-level generation functions
@@ -1003,12 +1004,12 @@ void t_perl_generator::generate_service_rest(t_service* tservice) {
       f_service_ << indent() << "my $" << (*a_iter)->get_name() << " = (" << req << ") ? " << req
                  << " : undef;" << endl;
       /* slist no longer supported
-	  if (atype->is_string() && ((t_base_type*)atype)->is_string_list()) {
+      if (atype->is_string() && ((t_base_type*)atype)->is_string_list()) {
         f_service_ << indent() << "my @" << (*a_iter)->get_name() << " = split(/,/, $"
                    << (*a_iter)->get_name() << ");" << endl << indent() << "$"
                    << (*a_iter)->get_name() << " = \\@" << (*a_iter)->get_name() << endl;
       }
-	  */
+      */
     }
     f_service_ << indent() << "return $self->{impl}->" << (*f_iter)->get_name() << "("
                << argument_list((*f_iter)->get_arglist()) << ");" << endl;
@@ -1666,6 +1667,8 @@ string t_perl_generator::type_to_enum(t_type* type) {
       return "Thrift::TType::I64";
     case t_base_type::TYPE_DOUBLE:
       return "Thrift::TType::DOUBLE";
+    default:
+      throw "compiler error: unhandled type";
     }
   } else if (type->is_enum()) {
     return "Thrift::TType::I32";
@@ -1681,5 +1684,10 @@ string t_perl_generator::type_to_enum(t_type* type) {
 
   throw "INVALID TYPE IN type_to_enum: " + type->get_name();
 }
+
+std::string t_perl_generator::display_name() const {
+  return "Perl";
+}
+
 
 THRIFT_REGISTER_GENERATOR(perl, "Perl", "")

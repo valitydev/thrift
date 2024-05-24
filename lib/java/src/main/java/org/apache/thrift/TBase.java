@@ -33,7 +33,7 @@ public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
    * @param fieldId the ID of the requested field.
    * @return F instance that corresponds to fieldId.
    */
-  public F fieldForId(int fieldId);
+  F fieldForId(int fieldId);
 
   /**
    * Check if a field is currently set or unset.
@@ -41,7 +41,7 @@ public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
    * @param field the field to check.
    * @return true if the field is set, false otherwise.
    */
-  public boolean isSet(F field);
+  boolean isSet(F field);
 
   /**
    * Get a field's value by field variable. Primitive types will be wrapped in the appropriate
@@ -50,7 +50,7 @@ public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
    * @param field the field whose value is requested.
    * @return the value of the requested field.
    */
-  public Object getFieldValue(F field);
+  Object getFieldValue(F field);
 
   /**
    * Get all fields.
@@ -73,18 +73,18 @@ public interface TBase<T extends TBase<T, F>, F extends TFieldIdEnum>
    * @param field the field whose value is to be set.
    * @param value the value to be assigned to field.
    */
-  public void setFieldValue(F field, Object value);
+  void setFieldValue(F field, Object value);
 
   /**
    * Performs a deep copy of this instance and returns the copy.
    *
    * @return a deep copy of this instance.
    */
-  public T deepCopy();
+  T deepCopy();
 
   /**
    * Return to the state of having just been initialized, as though you had just called the default
    * constructor.
    */
-  public void clear();
+  void clear();
 }
