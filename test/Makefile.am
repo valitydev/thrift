@@ -148,6 +148,7 @@ EXTRA_DIST = \
 	AnnotationTest.thrift \
 	BrokenConstants.thrift \
 	ConstantsDemo.thrift \
+	v0.16/ConstantsDemo.thrift \
 	DebugProtoTest.thrift \
 	v0.16/DebugProtoTest.thrift \
 	DenseLinkingTest.thrift \
@@ -163,6 +164,7 @@ EXTRA_DIST = \
 	ManyOptionals.thrift \
 	ManyTypedefs.thrift \
 	NameConflictTest.thrift \
+	v0.16/NameConflictTest.thrift \
 	OptionalRequiredTest.thrift \
 	Recursive.thrift \
 	ReuseObjects.thrift \

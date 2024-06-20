@@ -115,13 +115,13 @@ ENV PATH /usr/lib/dart/bin:$PATH
 
 RUN apt-get install -y --no-install-recommends \
       `# dotnet core dependencies` \
-      dotnet-sdk-7.0 \
-      dotnet-runtime-7.0 \
-      aspnetcore-runtime-7.0 \
-      dotnet-apphost-pack-7.0
+      dotnet-sdk-8.0 \
+      dotnet-runtime-8.0 \
+      aspnetcore-runtime-8.0 \
+      dotnet-apphost-pack-8.0
 
 # Erlang dependencies
-ARG ERLANG_OTP_VERSION=18.3.4.11
+ARG ERLANG_OTP_VERSION=20.3.8.9
 ARG ERLANG_REBAR_VERSION=3.13.2
 RUN apt-get update && apt-get install -y --no-install-recommends automake libncurses5-dev && \
       curl https://raw.githubusercontent.com/kerl/kerl/master/kerl -o /usr/local/bin/kerl && chmod +x /usr/local/bin/kerl && \
@@ -155,7 +155,7 @@ RUN apt-get install -y --no-install-recommends \
       haxelib install --always hxcpp 3.4.64 2>&1 > /dev/null
 # note: hxcpp 3.4.185 (latest) no longer ships static libraries, and caused a build failure
 
-ENV GRADLE_VERSION="8.0.2"
+ENV GRADLE_VERSION="8.4"
 RUN apt-get install -y --no-install-recommends \
       `# Java dependencies` \
       ant \
@@ -165,7 +165,7 @@ RUN apt-get install -y --no-install-recommends \
       unzip && \
       `# Gradle` \
       wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip -q -O /tmp/gradle-$GRADLE_VERSION-bin.zip && \
-      (echo "ff7bf6a86f09b9b2c40bb8f48b25fc19cf2b2664fd1d220cd7ab833ec758d0d7  /tmp/gradle-$GRADLE_VERSION-bin.zip" | sha256sum -c -) && \
+      (echo "3e1af3ae886920c3ac87f7a91f816c0c7c436f276a6eefdb3da152100fef72ae  /tmp/gradle-$GRADLE_VERSION-bin.zip" | sha256sum -c -) && \
       unzip -d /tmp /tmp/gradle-$GRADLE_VERSION-bin.zip && \
       mv /tmp/gradle-$GRADLE_VERSION /usr/local/gradle && \
       ln -s /usr/local/gradle/bin/gradle /usr/local/bin
@@ -249,7 +249,7 @@ RUN apt-get install -y --no-install-recommends \
       ruby-bundler
 
 # Rust dependencies
-RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.61.0 -y
+RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain 1.65.0 -y
 
 # Locale(s) for cpp unit tests
 RUN apt-get install -y --no-install-recommends \

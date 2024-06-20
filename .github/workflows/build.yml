@@ -11,7 +11,6 @@ env:
   BUILD_DEPS: automake bison flex git libboost-all-dev libevent-dev libssl-dev libtool make pkg-config
   CONFIG_ARGS_FOR_LIBS: >
     --disable-debug
-    --disable-tests
     --disable-dependency-tracking
     --without-cpp
     --without-c_glib
@@ -47,7 +46,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -84,13 +83,13 @@ jobs:
     strategy:
       matrix:
         go:
-          - '1.20'
           - '1.21'
+          - '1.22'
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
 
@@ -129,7 +128,7 @@ jobs:
         run: make -C test/go precross
 
       - name: Upload go precross artifacts
-        if: matrix.go == '1.21'
+        if: matrix.go == '1.22'
         uses: actions/upload-artifact@v3
         with:
           name: go-precross
@@ -142,11 +141,11 @@ jobs:
     needs: compiler
     runs-on: ubuntu-20.04
     env:
-      GRADLE_VERSION: "8.0.2"
+      GRADLE_VERSION: "8.4"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -161,7 +160,7 @@ jobs:
       - name: Setup gradle
         run: |
           wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip -q -O /tmp/gradle-$GRADLE_VERSION-bin.zip
-          (echo "ff7bf6a86f09b9b2c40bb8f48b25fc19cf2b2664fd1d220cd7ab833ec758d0d7  /tmp/gradle-$GRADLE_VERSION-bin.zip" | sha256sum -c -)
+          (echo "3e1af3ae886920c3ac87f7a91f816c0c7c436f276a6eefdb3da152100fef72ae  /tmp/gradle-$GRADLE_VERSION-bin.zip" | sha256sum -c -)
           unzip -d /tmp /tmp/gradle-$GRADLE_VERSION-bin.zip
           sudo mv /tmp/gradle-$GRADLE_VERSION /usr/local/gradle
           sudo ln -s /usr/local/gradle/bin/gradle /usr/local/bin
@@ -250,7 +249,7 @@ jobs:
     needs: compiler
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run bootstrap
         run: ./bootstrap.sh
@@ -286,9 +285,9 @@ jobs:
     needs: compiler
     runs-on: ubuntu-20.04
     env:
-      TOOLCHAIN_VERSION: 1.61.0
+      TOOLCHAIN_VERSION: 1.65.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -356,7 +355,7 @@ jobs:
           - "3.x"
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -365,7 +364,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends curl openssl ca-certificates
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -420,13 +419,13 @@ jobs:
         client_lang: ['java,kotlin', 'go,rs', 'swift']
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           # here we intentionally use an older version so that we also verify Java 17 compiles to it

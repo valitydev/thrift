@@ -20,14 +20,15 @@
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latestMajor</LangVersion>
     <TieredCompilation>false</TieredCompilation>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
   </ItemGroup>
 
   <ItemGroup>

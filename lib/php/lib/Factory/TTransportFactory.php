@@ -4,7 +4,7 @@ namespace Thrift\Factory;
 
 use Thrift\Transport\TTransport;
 
-class TTransportFactory
+class TTransportFactory implements TTransportFactoryInterface
 {
     /**
      * @static
