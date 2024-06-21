@@ -5791,7 +5791,6 @@ void t_java_generator::generate_java_struct_tuple_writer(ostream& out, t_struct*
     }
 
     indent(out) << "oprot.writeBitSet(optionals, " << optional_count << ");" << endl;
-    int j = 0;
     for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
       if ((*f_iter)->get_req() == t_field::T_OPTIONAL
           || (*f_iter)->get_req() == t_field::T_OPT_IN_REQ_OUT) {
@@ -5800,7 +5799,6 @@ void t_java_generator::generate_java_struct_tuple_writer(ostream& out, t_struct*
         generate_serialize_field(out, (*f_iter), "struct.", "", false);
         indent_down();
         indent(out) << "}" << endl;
-        j++;
       }
     }
   }

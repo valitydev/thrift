@@ -177,7 +177,7 @@ Last updated: October 1, 2017
 | d         | 2.087.0       | 2.087.0       |       |
 | dart      | 2.0.0         | 2.4.0         |       |
 | delphi    |               |               | Not in CI |
-| erlang    | OTP-18        | OTP-23        |       |
+| erlang    | OTP-20        | OTP-25        |       |
 | go        | 1.15.10       | 1.16.2        |       |
 | haxe      | 3.2.1         | 3.4.4         | THRIFT-4352: avoid 3.4.2 |
 | java      | 1.8.0\_191     | 17           |       |
@@ -191,6 +191,6 @@ Last updated: October 1, 2017
 | python    | 2.7.12        | 2.7.15        |       |
 | python3   | 3.5.2         | 3.6.8         |       |
 | ruby      | 2.3.1p112     | 2.5.1p57      |       |
-| rust      | 1.61.0        | 1.61.0        |       |
+| rust      | 1.65.0        | 1.65.0        |       |
 | smalltalk |               |               | Not in CI |
 | swift     |               | 5.1.4         |       |
