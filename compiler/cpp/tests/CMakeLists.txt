@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5...3.31)
 
 project(thrift_compiler_tests)
 
@@ -61,7 +61,7 @@ add_library(parse STATIC ${parse_SOURCES})
 set(thrift_compiler_tests
 )
 
-# you can add some files manually there 
+# you can add some files manually there
 set(thrift_compiler_tests_manual_SOURCES
     # tests file to avoid main in every test file
     ${CMAKE_CURRENT_SOURCE_DIR}/tests_main.cc
