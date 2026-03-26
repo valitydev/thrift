@@ -225,9 +225,12 @@ public:
   std::string get_import_path(t_program* program);
   std::string declare_field(t_field* tfield, bool init = false, bool obj = false);
   std::string function_signature(t_function* tfunction,
-                                 std::string prefix = "",
-                                 bool include_callback = false);
-  std::string argument_list(t_struct* tstruct, bool include_callback = false);
+                               std::string prefix = "",
+                               bool include_callback = false,
+                               const std::string& callback_name = "callback");
+  std::string argument_list(t_struct* tstruct,
+                          bool include_callback = false,
+                          const std::string& callback_name = "callback");
   std::string type_to_enum(t_type* ttype);
   std::string make_valid_nodeJs_identifier(std::string const& name);
   std::string next_identifier_name(std::vector<t_field*> const& fields, std::string const& base_name);
@@ -313,8 +316,9 @@ public:
    * TypeScript Definition File helper functions
    */
 
-  string ts_function_signature(t_function* tfunction, bool include_callback);
-  string ts_get_type(t_type* type);
+string ts_function_signature(t_function* tfunction,
+                             bool include_callback,
+                             const std::string& callback_name = "callback");
 
   /**
    * Special indentation for TypeScript Definitions because of the module.
@@ -927,9 +931,9 @@ void t_js_generator::generate_js_struct_definition(ostream& out,
 
       // Special case. Exceptions derive from Error, and error has a non optional message field.
       // Ignore the optional flag in this case, otherwise we will generate a incompatible field
-      // in the eyes of typescript. 
+      // in the eyes of typescript.
       string optional_flag = is_exception && member_name == "message" ? "" : ts_get_req(*m_iter);
- 
+
       f_types_ts_ << ts_indent() << ts_access << member_name << optional_flag << ": "
                   << ts_get_type((*m_iter)->get_type()) << ";" << endl;
     }
@@ -1830,6 +1834,7 @@ void t_js_generator::generate_service_client(t_service* tservice) {
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     t_struct* arg_struct = (*f_iter)->get_arglist();
     const vector<t_field*>& fields = arg_struct->get_members();
+    const std::string callback_name = next_identifier_name(fields, "callback");
     vector<t_field*>::const_iterator fld_iter;
     string funname = (*f_iter)->get_name();
     string arglist = argument_list(arg_struct);
@@ -1840,20 +1845,20 @@ void t_js_generator::generate_service_client(t_service* tservice) {
       indent(f_service_) << funname << " (" << arglist << ") {" << endl;
     } else {
       indent(f_service_) << js_namespace(tservice->get_program()) << service_name_ << "Client.prototype."
-                << function_signature(*f_iter, "", !gen_es6_) << " {" << endl;
+                << function_signature(*f_iter, "", !gen_es6_, callback_name) << " {" << endl;
     }
 
     indent_up();
 
     if (gen_ts_) {
       // function definition without callback
-      f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, false) << endl;
+      f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, false, callback_name) << endl;
       if (!gen_es6_) {
         // overload with callback
-        f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, true) << endl;
+        f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, true, callback_name) << endl;
       } else {
         // overload with callback
-        f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, true) << endl;
+        f_service_ts_ << ts_print_doc(*f_iter) << ts_indent() << ts_function_signature(*f_iter, true, callback_name) << endl;
       }
     }
 
@@ -1872,7 +1877,7 @@ void t_js_generator::generate_service_client(t_service* tservice) {
       indent(f_service_) << "});" << endl;
     } else if (gen_node_) { // Node.js output      ./gen-nodejs
       f_service_ << indent() << "this._seqid = this.new_seqid();" << endl << indent()
-                 << "if (callback === undefined) {" << endl;
+                 << "if (" << callback_name << " === undefined) {" << endl;
       indent_up();
       f_service_ << indent() << js_const_type_ << "_defer = Q.defer();" << endl << indent()
                  << "this._reqs[this.seqid()] = function(error, result) {" << endl;
@@ -1893,7 +1898,7 @@ void t_js_generator::generate_service_client(t_service* tservice) {
       indent_down();
       indent(f_service_) << "} else {" << endl;
       indent_up();
-      f_service_ << indent() << "this._reqs[this.seqid()] = callback;" << endl << indent()
+      f_service_ << indent() << "this._reqs[this.seqid()] = " << callback_name << ";" << endl << indent()
                  << "this.send_" << funname << "(" << arglist << ");" << endl;
       indent_down();
       indent(f_service_) << "}" << endl;
@@ -1911,7 +1916,7 @@ void t_js_generator::generate_service_client(t_service* tservice) {
       f_service_ << indent() << "});" << endl;
 
     } else if (gen_jquery_) { // jQuery output       ./gen-js
-      f_service_ << indent() << "if (callback === undefined) {" << endl;
+      f_service_ << indent() << "if (" << callback_name << " === undefined) {" << endl;
       indent_up();
       f_service_ << indent() << "this.send_" << funname << "(" << arglist << ");" << endl;
       if (!(*f_iter)->is_oneway()) {
@@ -1935,9 +1940,9 @@ void t_js_generator::generate_service_client(t_service* tservice) {
       f_service_ << indent() << "}" << endl;
     } else { // Standard JavaScript ./gen-js
       f_service_ << indent() << "this.send_" << funname << "(" << arglist
-                 << (arglist.empty() ? "" : ", ") << "callback); " << endl;
+                 << (arglist.empty() ? "" : ", ") << callback_name << "); " << endl;
       if (!(*f_iter)->is_oneway()) {
-        f_service_ << indent() << "if (!callback) {" << endl;
+        f_service_ << indent() << "if (!" << callback_name << ") {" << endl;
         f_service_ << indent();
         if (!(*f_iter)->get_returntype()->is_void()) {
           f_service_ << "  return ";
@@ -2643,14 +2648,11 @@ string t_js_generator::declare_field(t_field* tfield, bool init, bool obj) {
  */
 string t_js_generator::function_signature(t_function* tfunction,
                                           string prefix,
-                                          bool include_callback) {
-
+                                          bool include_callback,
+                                          const std::string& callback_name) {
   string str;
-
   str = prefix + tfunction->get_name() + " = function(";
-
-  str += argument_list(tfunction->get_arglist(), include_callback);
-
+  str += argument_list(tfunction->get_arglist(), include_callback, callback_name);
   str += ")";
   return str;
 }
@@ -2658,9 +2660,10 @@ string t_js_generator::function_signature(t_function* tfunction,
 /**
  * Renders a field list
  */
-string t_js_generator::argument_list(t_struct* tstruct, bool include_callback) {
+string t_js_generator::argument_list(t_struct* tstruct,
+                                     bool include_callback,
+                                     const std::string& callback_name) {
   string result = "";
-
   const vector<t_field*>& fields = tstruct->get_members();
   vector<t_field*>::const_iterator f_iter;
   bool first = true;
@@ -2677,7 +2680,7 @@ string t_js_generator::argument_list(t_struct* tstruct, bool include_callback) {
     if (!fields.empty()) {
       result += ", ";
     }
-    result += "callback";
+    result += callback_name;
   }
 
   return result;
@@ -2818,7 +2821,9 @@ string t_js_generator::ts_get_type(t_type* type) {
  * @param bool in-/exclude the callback argument
  * @return String of rendered function definition
  */
-std::string t_js_generator::ts_function_signature(t_function* tfunction, bool include_callback) {
+std::string t_js_generator::ts_function_signature(t_function* tfunction,
+                                                  bool include_callback,
+                                                  const std::string& callback_name) {
   string str;
   const vector<t_field*>& fields = tfunction->get_arglist()->get_members();
   vector<t_field*>::const_iterator f_iter;
@@ -2857,12 +2862,12 @@ std::string t_js_generator::ts_function_signature(t_function* tfunction, bool in
         }
       }
       if (exception_types == "") {
-        str += "callback: (error: void, response: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
+        str += callback_name + ": (error: void, response: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
       } else {
-        str += "callback: (error: " + exception_types + ", response: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
+        str += callback_name + ": (error: " + exception_types + ", response: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
       }
     } else {
-      str += "callback: (data: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
+      str += callback_name + ": (data: " + ts_get_type(tfunction->get_returntype()) + ")=>void): ";
     }
 
     if (gen_jquery_) {
