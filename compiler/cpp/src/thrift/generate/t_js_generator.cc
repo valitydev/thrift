@@ -319,7 +319,7 @@ public:
 string ts_function_signature(t_function* tfunction,
                              bool include_callback,
                              const std::string& callback_name = "callback");
-
+string ts_get_type(t_type* type);
   /**
    * Special indentation for TypeScript Definitions because of the module.
    * Returns the normal indentation + "  " if a module was defined.
