@@ -65,6 +65,7 @@ public:
     std::map<std::string, std::string>::const_iterator iter;
 
     gen_node_ = false;
+    gen_node_runtime_package_ = "thrift";
     gen_jquery_ = false;
     gen_ts_ = false;
     gen_es6_ = false;
@@ -76,6 +77,8 @@ public:
     for (iter = parsed_options.begin(); iter != parsed_options.end(); ++iter) {
       if( iter->first.compare("node") == 0) {
         gen_node_ = true;
+      } else if( iter->first.compare("runtime_package") == 0) {
+        gen_node_runtime_package_ = iter->second;
       } else if( iter->first.compare("jquery") == 0) {
         gen_jquery_ = true;
       } else if( iter->first.compare("ts") == 0) {
@@ -360,6 +363,11 @@ private:
   bool gen_node_;
 
   /**
+   * Name of a thrift runtime package to require.
+   */
+  std::string gen_node_runtime_package_;
+
+  /**
    * True if we should generate services that use jQuery ajax (async/sync).
    */
   bool gen_jquery_;
@@ -550,7 +558,7 @@ string t_js_generator::js_includes() {
 string t_js_generator::ts_includes() {
   if (gen_node_) {
     return string(
-        "import thrift = require('thrift');\n"
+        "import thrift = require('" + gen_node_runtime_package_ + "');\n"
         "import Thrift = thrift.Thrift;\n"
         "import Q = thrift.Q;\n"
         "import Int64 = require('node-int64');");
@@ -564,7 +572,7 @@ string t_js_generator::ts_includes() {
 string t_js_generator::ts_service_includes() {
   if (gen_node_) {
     return string(
-        "import thrift = require('thrift');\n"
+        "import thrift = require('" + gen_node_runtime_package_ + "');\n"
         "import Thrift = thrift.Thrift;\n"
         "import Q = thrift.Q;\n"
         "import Int64 = require('node-int64');");
@@ -2575,8 +2583,9 @@ void t_js_generator::generate_serialize_container(ostream& out, t_type* ttype, s
     indent_up();
     indent(out) << js_let_type_ << viter << " = " << prefix << "[" << kiter << "];" << '\n';
     generate_serialize_map_element(out, (t_map*)ttype, kiter, viter);
-    scope_down(out);
-    scope_down(out);
+    indent_down();
+    indent(out) << "};" << endl;
+    indent(out) << prefix << ".forEach(" << serialize_func << ");" << endl;
 
   } else if (ttype->is_set()) {
     string iter = tmp("iter");
@@ -3073,6 +3082,7 @@ THRIFT_REGISTER_GENERATOR(js,
                           "Javascript",
                           "    jquery:          Generate jQuery compatible code.\n"
                           "    node:            Generate node.js compatible code.\n"
+                          "    runtime_package: (node.js) Name of a thrift runtime package to require in generated code.\n"
                           "    ts:              Generate TypeScript definition files.\n"
                           "    with_ns:         Create global namespace objects when using node.js\n"
                           "    es6:             Create ES6 code with Promises\n"

@@ -771,6 +771,7 @@ AC_CONFIG_FILES([
   lib/d/Makefile
   lib/d/test/Makefile
   lib/erl/Makefile
+  lib/erlang/Makefile
   lib/go/Makefile
   lib/go/test/Makefile
   lib/go/test/fuzz/Makefile
@@ -810,6 +811,7 @@ AC_CONFIG_FILES([
   test/cl/Makefile
   test/cpp/Makefile
   test/erl/Makefile
+  test/erlang/Makefile
   test/go/Makefile
   test/haxe/Makefile
   test/lua/Makefile

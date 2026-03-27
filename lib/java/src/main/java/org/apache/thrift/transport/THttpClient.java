@@ -19,6 +19,13 @@
 
 package org.apache.thrift.transport;
 
+import dev.vality.woody.api.interceptor.CommonInterceptor;
+import dev.vality.woody.api.interceptor.EmptyCommonInterceptor;
+import dev.vality.woody.api.trace.ContextUtils;
+import dev.vality.woody.api.trace.TraceData;
+import dev.vality.woody.api.trace.context.TraceContext;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,15 +34,19 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.util.Timeout;
 import org.apache.thrift.TConfiguration;
-import org.apache.thrift.THttpClientResponseHandler;
 
 /**
  * HTTP implementation of the TTransport interface. Used for working with a Thrift web services
@@ -76,6 +87,8 @@ public class THttpClient extends TEndpointTransport {
 
   private final HttpClient client;
 
+  private final CommonInterceptor interceptor;
+
   private static final Map<String, String> DEFAULT_HEADERS =
       Collections.unmodifiableMap(getDefaultHeaders());
 
@@ -83,24 +96,33 @@ public class THttpClient extends TEndpointTransport {
 
     private final String url;
     private final HttpClient client;
+    private final CommonInterceptor interceptor;
 
     public Factory(String url) {
-      this.url = url;
-      this.client = null;
+      this(url, (HttpClient) null);
+    }
+
+    public Factory(String url, CommonInterceptor interceptor) {
+      this(url, null, interceptor);
     }
 
     public Factory(String url, HttpClient client) {
+      this(url, client, null);
+    }
+
+    public Factory(String url, HttpClient client, CommonInterceptor interceptor) {
       this.url = url;
       this.client = client;
+      this.interceptor = interceptor;
     }
 
     @Override
     public TTransport getTransport(TTransport trans) {
       try {
         if (null != client) {
-          return new THttpClient(trans.getConfiguration(), url, client);
+          return new THttpClient(trans.getConfiguration(), url, client, interceptor);
         } else {
-          return new THttpClient(trans.getConfiguration(), url);
+          return new THttpClient(trans.getConfiguration(), url, interceptor);
         }
       } catch (TTransportException tte) {
         return null;
@@ -114,17 +136,36 @@ public class THttpClient extends TEndpointTransport {
       url_ = new URL(url);
       this.client = null;
       this.host = null;
+      this.interceptor = new EmptyCommonInterceptor();
+    } catch (IOException iox) {
+      throw new TTransportException(iox);
+    }
+  }
+
+  public THttpClient(TConfiguration config, String url, CommonInterceptor interceptor)
+      throws TTransportException {
+    super(config);
+    try {
+      url_ = new URL(url);
+      this.client = null;
+      this.host = null;
+      this.interceptor = interceptor == null ? new EmptyCommonInterceptor() : interceptor;
     } catch (IOException iox) {
       throw new TTransportException(iox);
     }
   }
 
   public THttpClient(String url) throws TTransportException {
+    this(url, (CommonInterceptor) null);
+  }
+
+  public THttpClient(String url, CommonInterceptor interceptor) throws TTransportException {
     super(new TConfiguration());
     try {
       url_ = new URL(url);
       this.client = null;
       this.host = null;
+      this.interceptor = interceptor == null ? new EmptyCommonInterceptor() : interceptor;
     } catch (IOException iox) {
       throw new TTransportException(iox);
     }
@@ -141,12 +182,36 @@ public class THttpClient extends TEndpointTransport {
               url_.getProtocol(),
               url_.getHost(),
               -1 == url_.getPort() ? url_.getDefaultPort() : url_.getPort());
+      this.interceptor = new EmptyCommonInterceptor();
+    } catch (IOException iox) {
+      throw new TTransportException(iox);
+    }
+  }
+
+  public THttpClient(
+      TConfiguration config, String url, HttpClient client, CommonInterceptor interceptor)
+      throws TTransportException {
+    super(config);
+    try {
+      url_ = new URL(url);
+      this.client = client;
+      this.host =
+          new HttpHost(
+              url_.getProtocol(),
+              url_.getHost(),
+              -1 == url_.getPort() ? url_.getDefaultPort() : url_.getPort());
+      this.interceptor = interceptor == null ? new EmptyCommonInterceptor() : interceptor;
     } catch (IOException iox) {
       throw new TTransportException(iox);
     }
   }
 
   public THttpClient(String url, HttpClient client) throws TTransportException {
+    this(url, client, null);
+  }
+
+  public THttpClient(String url, HttpClient client, CommonInterceptor interceptor)
+      throws TTransportException {
     super(new TConfiguration());
     try {
       url_ = new URL(url);
@@ -156,6 +221,7 @@ public class THttpClient extends TEndpointTransport {
               url_.getProtocol(),
               url_.getHost(),
               -1 == url_.getPort() ? url_.getDefaultPort() : url_.getPort());
+      this.interceptor = interceptor == null ? new EmptyCommonInterceptor() : interceptor;
     } catch (IOException iox) {
       throw new TTransportException(iox);
     }
@@ -185,6 +251,10 @@ public class THttpClient extends TEndpointTransport {
       customHeaders_ = new HashMap<>();
     }
     customHeaders_.put(key, value);
+  }
+
+  public HttpClient getHttpClient() {
+    return client;
   }
 
   @Override
@@ -240,6 +310,13 @@ public class THttpClient extends TEndpointTransport {
               .setConnectionRequestTimeout(Timeout.ofMilliseconds(connectTimeout_))
               .build();
     }
+
+    if (readTimeout_ > 0) {
+      requestConfig =
+              RequestConfig.copy(requestConfig)
+                      .setResponseTimeout(Timeout.ofMilliseconds(readTimeout_))
+                      .build();
+    }
     return requestConfig;
   }
 
@@ -262,6 +339,50 @@ public class THttpClient extends TEndpointTransport {
     return headers;
   }
 
+  /**
+   * copy from org.apache.http.util.EntityUtils#consume. Android has it's own httpcore that doesn't
+   * have a consume.
+   */
+  private static void consume(final HttpEntity entity) throws IOException {
+    if (entity == null) {
+      return;
+    }
+    if (entity.isStreaming()) {
+      InputStream instream = entity.getContent();
+      if (instream != null) {
+        instream.close();
+      }
+    }
+  }
+
+  private void setMainHeaders(BiConsumer<String, String> hSetter) {
+    hSetter.accept("Content-Type", "application/x-thrift");
+    hSetter.accept("Accept", "application/x-thrift");
+    hSetter.accept("User-Agent", "Java/THttpClient/HC");
+  }
+
+  private void setCustomHeaders(BiConsumer<String, String> hSetter) {
+    if (null != customHeaders_) {
+      for (Map.Entry<String, String> header : customHeaders_.entrySet()) {
+        hSetter.accept(header.getKey(), header.getValue());
+      }
+    }
+  }
+
+  private void intercept(BooleanSupplier interception, String errMsg) throws TTransportException {
+    if (!interception.getAsBoolean()) {
+      Throwable reqErr =
+          ContextUtils.getInterceptionError(TraceContext.getCurrentTraceData().getClientSpan());
+      if (reqErr != null) {
+        if (reqErr instanceof RuntimeException) {
+          throw (RuntimeException) reqErr;
+        } else {
+          throw new TTransportException(errMsg, reqErr);
+        }
+      }
+    }
+  }
+
   private void flushUsingHttpClient() throws TTransportException {
     if (null == this.client) {
       throw new TTransportException("Null HttpClient, aborting.");
@@ -279,8 +400,15 @@ public class THttpClient extends TEndpointTransport {
       if (null != customHeaders_) {
         customHeaders_.forEach(post::addHeader);
       }
+      TraceData traceData = TraceContext.getCurrentTraceData();
+      intercept(
+          () -> interceptor.interceptRequest(traceData, post, this.url_),
+          "Request interception error");
       post.setEntity(new ByteArrayEntity(data, null));
-      inputStream_ = client.execute(this.host, post, new THttpClientResponseHandler());
+      ClassicHttpResponse response = this.client.executeOpen(this.host, post, null);
+      intercept(
+          () -> interceptor.interceptResponse(traceData, response), "Response interception error");
+      handleResponse(response);
     } catch (IOException ioe) {
       // Abort method so the connection gets released back to the connection manager
       post.abort();
@@ -288,6 +416,51 @@ public class THttpClient extends TEndpointTransport {
     } finally {
       resetConsumedMessageSize(-1);
     }
+  }
+
+  private void handleResponse(ClassicHttpResponse response) throws TTransportException {
+    // Retrieve the InputStream BEFORE checking the status code so
+    // resources get freed in the with clause.
+    try (InputStream is = response.getEntity().getContent()) {
+      int responseCode = response.getCode();
+      if (responseCode != HttpStatus.SC_OK) {
+        throw new TTransportException("HTTP Response code: " + responseCode);
+      }
+      byte[] readByteArray = readIntoByteArray(is);
+      try {
+        // Indicate we're done with the content.
+        consume(response.getEntity());
+      } catch (IOException ioe) {
+        // We ignore this exception, it might only mean the server has no
+        // keep-alive capability.
+      }
+      inputStream_ = new ByteArrayInputStream(readByteArray);
+    } catch (IOException ioe) {
+      throw new TTransportException(ioe);
+    }
+  }
+
+  /**
+   * Read the responses into a byte array so we can release the connection early. This implies that
+   * the whole content will have to be read in memory, and that momentarily we might use up twice
+   * the memory (while the thrift struct is being read up the chain). Proceeding differently might
+   * lead to exhaustion of connections and thus to app failure.
+   *
+   * @param is input stream
+   * @return read bytes
+   * @throws IOException when exception during read
+   */
+  private static byte[] readIntoByteArray(InputStream is) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buf = new byte[1024];
+    int len;
+    do {
+      len = is.read(buf);
+      if (len > 0) {
+        baos.write(buf, 0, len);
+      }
+    } while (-1 != len);
+    return baos.toByteArray();
   }
 
   public void flush() throws TTransportException {
@@ -315,22 +488,23 @@ public class THttpClient extends TEndpointTransport {
 
       // Make the request
       connection.setRequestMethod("POST");
-      connection.setRequestProperty("Content-Type", "application/x-thrift");
-      connection.setRequestProperty("Accept", "application/x-thrift");
-      connection.setRequestProperty("User-Agent", "Java/THttpClient");
-      if (customHeaders_ != null) {
-        for (Map.Entry<String, String> header : customHeaders_.entrySet()) {
-          connection.setRequestProperty(header.getKey(), header.getValue());
-        }
-      }
+      setMainHeaders((key, val) -> connection.setRequestProperty(key, val));
+
+      setCustomHeaders((key, val) -> connection.setRequestProperty(key, val));
+
+      TraceData traceData = TraceContext.getCurrentTraceData();
+
+      intercept(
+          () -> interceptor.interceptRequest(traceData, connection, url_),
+          "Request interception error");
+
       connection.setDoOutput(true);
       connection.connect();
       connection.getOutputStream().write(data);
 
-      int responseCode = connection.getResponseCode();
-      if (responseCode != HttpURLConnection.HTTP_OK) {
-        throw new TTransportException("HTTP Response code: " + responseCode);
-      }
+      intercept(
+          () -> interceptor.interceptResponse(traceData, connection),
+          "Response interception error");
 
       // Read the responses
       inputStream_ = connection.getInputStream();

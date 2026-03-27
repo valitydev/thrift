@@ -17,35 +17,24 @@
 # under the License.
 #
 
-name: "PyPI publishing"
+THRIFT = $(top_builddir)/compiler/cpp/thrift
 
-on:
-  release:
-    types: [published]
+THRIFT_FILES = $(wildcard ../*.thrift)
 
-jobs:
-  pypi-publish:
-    name: Publish release to PyPI
-    runs-on: ubuntu-latest
-    # Specifying a GitHub environment is optional, but strongly encouraged
-    environment: release
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
+ERL_FLAG = erlang
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.8"
+# make sure ThriftTest.thrift is generated last to prevent conflicts with other *.thrift files
+.generated: $(THRIFT_FILES)
+	for f in $(THRIFT_FILES) ; do \
+	  $(THRIFT) --gen $(ERL_FLAG) -o src $$f ; \
+	done ; \
+	$(THRIFT) --gen $(ERL_FLAG) -o src ../ThriftTest.thrift
+	touch .generated
 
-      - name: Build
-        run: |
-          cd lib/py
-          python setup.py sdist
+precross: .generated
+	$(REBAR) compile
 
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: lib/py/dist/
+clean:
+	rm -f .generated
+	rm -rf src/gen-erlang
+	$(REBAR) clean

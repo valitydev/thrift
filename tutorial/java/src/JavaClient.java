@@ -60,7 +60,7 @@ public class JavaClient {
       }
 
       TProtocol protocol = new  TBinaryProtocol(transport);
-      Calculator.Client client = new Calculator.Client(protocol);
+      CalculatorSrv.Client client = new CalculatorSrv.Client(protocol);
 
       perform(client);
 
@@ -70,7 +70,7 @@ public class JavaClient {
     }
   }
 
-  private static void perform(Calculator.Client client) throws TException
+  private static void perform(CalculatorSrv.Client client) throws TException
   {
     client.ping();
     System.out.println("ping()");

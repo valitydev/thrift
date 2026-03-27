@@ -28,4 +28,8 @@ public class EnumMetaData extends FieldValueMetaData {
     super(type);
     this.enumClass = sClass;
   }
+
+  public Class<? extends TEnum> getEnumClass() {
+    return enumClass;
+  }
 }

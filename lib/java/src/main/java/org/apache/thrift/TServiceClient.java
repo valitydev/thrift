@@ -19,6 +19,9 @@
 
 package org.apache.thrift;
 
+import dev.vality.woody.api.interceptor.CommonInterceptor;
+import dev.vality.woody.api.trace.MetadataProperties;
+import dev.vality.woody.api.trace.context.TraceContext;
 import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
@@ -39,6 +42,7 @@ public abstract class TServiceClient {
 
   protected TProtocol iprot_;
   protected TProtocol oprot_;
+  protected CommonInterceptor interceptor;
 
   protected int seqid_;
 
@@ -60,6 +64,14 @@ public abstract class TServiceClient {
     return this.oprot_;
   }
 
+  public CommonInterceptor getInterceptor() {
+    return interceptor;
+  }
+
+  public void setInterceptor(CommonInterceptor interceptor) {
+    this.interceptor = interceptor;
+  }
+
   protected void sendBase(String methodName, TBase<?, ?> args) throws TException {
     sendBase(methodName, args, TMessageType.CALL);
   }
@@ -76,6 +88,12 @@ public abstract class TServiceClient {
   }
 
   protected void receiveBase(TBase<?, ?> result, String methodName) throws TException {
+    if (TraceContext.getCurrentTraceData()
+        .getActiveSpan()
+        .getMetadata()
+        .containsKey(MetadataProperties.RESPONSE_SKIP_READING_FLAG)) {
+      return;
+    }
     TMessage msg = iprot_.readMessageBegin();
     if (msg.type == TMessageType.EXCEPTION) {
       TApplicationException x = new TApplicationException();

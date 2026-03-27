@@ -197,6 +197,8 @@ public:
   void generate_metadata_for_field_annotations(std::ostream& out, t_field* field);
   std::string get_java_type_string(t_type* type);
   void generate_java_struct_field_by_id(ostream& out, t_struct* tstruct);
+  void generate_java_struct_get_fields(ostream& out);
+  void generate_java_struct_get_metadata(ostream& out);
   void generate_reflection_setters(std::ostringstream& out,
                                    t_type* type,
                                    std::string field_name,
@@ -372,6 +374,14 @@ public:
   std::string make_valid_java_identifier(std::string const& fromName);
 
   string normalize_name(string name);
+  std::string make_java_service_name_fix(std::string const& srvName);
+
+  t_type* get_leaf_type_in_typedef(t_typedef* t_tdef) {
+    if (t_tdef->get_type()->is_typedef()) {
+        return get_leaf_type_in_typedef((t_typedef*) t_tdef->get_type());
+    }
+    return t_tdef->get_type();
+  }
 
   bool type_can_be_null(t_type* ttype) {
     ttype = get_true_type(ttype);
@@ -939,6 +949,9 @@ void t_java_generator::generate_java_union(t_struct* tstruct) {
   generate_union_abstract_methods(f_struct, tstruct);
 
   f_struct << '\n';
+
+  generate_java_struct_get_fields(f_struct);
+  generate_java_struct_get_metadata(f_struct);
 
   generate_java_struct_field_by_id(f_struct, tstruct);
 
@@ -1770,6 +1783,8 @@ void t_java_generator::generate_java_struct_definition(ostream& out,
   generate_java_struct_equality(out, tstruct);
   generate_java_struct_compare_to(out, tstruct);
   generate_java_struct_field_by_id(out, tstruct);
+  generate_java_struct_get_fields(out);
+  generate_java_struct_get_metadata(out);
 
   generate_java_struct_reader(out, tstruct);
   if (is_result) {
@@ -2306,6 +2321,18 @@ void t_java_generator::generate_java_struct_field_by_id(ostream& out, t_struct* 
   indent(out) << "public _Fields fieldForId(int fieldId) {" << '\n';
   indent(out) << "  return _Fields.findByThriftId(fieldId);" << '\n';
   indent(out) << "}" << '\n' << '\n';
+}
+
+void t_java_generator::generate_java_struct_get_fields(ostream& out) {
+  indent(out) << "public _Fields[] getFields() {" << endl;
+  indent(out) << "  return _Fields.values();" << endl;
+  indent(out) << "}" << endl << endl;
+}
+
+void t_java_generator::generate_java_struct_get_metadata(ostream& out) {
+  indent(out) << "public java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> getFieldMetaData() {" << endl;
+  indent(out) << "  return metaDataMap;" << endl;
+  indent(out) << "}" << endl << endl;
 }
 
 void t_java_generator::generate_reflection_getters(ostringstream& out,
@@ -3028,6 +3055,10 @@ void t_java_generator::generate_field_value_meta_data(std::ostream& out, t_type*
   out << '\n';
   indent_up();
   indent_up();
+  if (type->is_typedef()) {
+    type = get_leaf_type_in_typedef(((t_typedef*)type));
+  }
+  t_type* ttype = get_true_type(type);
   if (ttype->is_struct() || ttype->is_xception()) {
     indent(out) << "new "
                    "org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType."
@@ -3081,7 +3112,7 @@ void t_java_generator::generate_field_value_meta_data(std::ostream& out, t_type*
  */
 void t_java_generator::generate_service(t_service* tservice) {
   // Make output file
-  string f_service_name = package_dir_ + "/" + make_valid_java_filename(service_name_) + ".java";
+  string f_service_name = package_dir_ + "/" + make_java_service_name_fix(make_valid_java_filename(service_name_)) + ".java";
   f_service_.open(f_service_name.c_str());
 
   f_service_ << autogen_comment() << java_package();
@@ -3122,7 +3153,7 @@ void t_java_generator::generate_service_interface(t_service* tservice) {
   string extends = "";
   string extends_iface = "";
   if (tservice->get_extends() != nullptr) {
-    extends = type_name(tservice->get_extends());
+    extends = make_java_service_name_fix(type_name(tservice->get_extends()));
     extends_iface = " extends " + extends + ".Iface";
   }
 
@@ -3143,7 +3174,7 @@ void t_java_generator::generate_service_async_interface(t_service* tservice) {
   string extends = "";
   string extends_iface = "";
   if (tservice->get_extends() != nullptr) {
-    extends = type_name(tservice->get_extends());
+    extends = make_java_service_name_fix(type_name(tservice->get_extends()));
     extends_iface = " extends " + extends + ".AsyncIface";
   }
 
@@ -3202,7 +3233,7 @@ void t_java_generator::generate_service_helpers(t_service* tservice) {
 void t_java_generator::generate_service_client(t_service* tservice) {
   string extends_client = "org.apache.thrift.TServiceClient";
   if (tservice->get_extends() != nullptr) {
-    extends_client = type_name(tservice->get_extends()) + ".Client";
+    extends_client = make_java_service_name_fix(type_name(tservice->get_extends())) + ".Client";
   }
 
   indent(f_service_) << "public static class Client extends " << extends_client
@@ -3415,7 +3446,7 @@ void t_java_generator::generate_service_future_client(t_service* tservice) {
 void t_java_generator::generate_service_async_client(t_service* tservice) {
   string extends_client = "org.apache.thrift.async.TAsyncClient";
   if (tservice->get_extends() != nullptr) {
-    extends_client = type_name(tservice->get_extends()) + ".AsyncClient";
+    extends_client = make_java_service_name_fix(type_name(tservice->get_extends())) + ".AsyncClient";
   }
 
   indent(f_service_) << "public static class AsyncClient extends " << extends_client
@@ -3616,7 +3647,7 @@ void t_java_generator::generate_service_server(t_service* tservice) {
   if (tservice->get_extends() == nullptr) {
     extends_processor = "org.apache.thrift.TBaseProcessor<I>";
   } else {
-    extends = type_name(tservice->get_extends());
+    extends = make_java_service_name_fix(type_name(tservice->get_extends()));
     extends_processor = extends + ".Processor<I>";
   }
 
@@ -3684,7 +3715,7 @@ void t_java_generator::generate_service_async_server(t_service* tservice) {
   if (tservice->get_extends() == nullptr) {
     extends_processor = "org.apache.thrift.TBaseAsyncProcessor<I>";
   } else {
-    extends = type_name(tservice->get_extends());
+    extends = make_java_service_name_fix(type_name(tservice->get_extends()));
     extends_processor = extends + ".AsyncProcessor<I>";
   }
 
@@ -3775,7 +3806,7 @@ void t_java_generator::generate_process_async_function(t_service* tservice, t_fu
     resultname = "org.apache.thrift.TBase";
   }
 
-  string resulttype = type_name(tfunction->get_returntype(), true);
+  string resulttype = type_name(tfunction->get_returntype(), true, false, false, true);
 
   (void)tservice;
   // Open class
@@ -4645,8 +4676,8 @@ string t_java_generator::type_name(t_type* ttype,
     }
     return prefix
            + (skip_generic ? ""
-                           : "<" + type_name(tmap->get_key_type(), true) + ","
-                                 + type_name(tmap->get_val_type(), true) + ">");
+                           : "<" + type_name(tmap->get_key_type(), true, false, false, force_namespace) + ","
+                                 + type_name(tmap->get_val_type(), true, false, false, force_namespace) + ">");
   } else if (ttype->is_set()) {
     t_set* tset = (t_set*)ttype;
     if (in_init) {
@@ -4660,7 +4691,7 @@ string t_java_generator::type_name(t_type* ttype,
     } else {
       prefix = "java.util.Set";
     }
-    return prefix + (skip_generic ? "" : "<" + type_name(tset->get_elem_type(), true) + ">");
+    return prefix + (skip_generic ? "" : "<" + type_name(tset->get_elem_type(), true, false, false, force_namespace) + ">");
   } else if (ttype->is_list()) {
     t_list* tlist = (t_list*)ttype;
     if (in_init) {
@@ -4668,7 +4699,7 @@ string t_java_generator::type_name(t_type* ttype,
     } else {
       prefix = "java.util.List";
     }
-    return prefix + (skip_generic ? "" : "<" + type_name(tlist->get_elem_type(), true) + ">");
+    return prefix + (skip_generic ? "" : "<" + type_name(tlist->get_elem_type(), true, false, false, force_namespace) + ">");
   }
 
   // Check for namespacing
@@ -5000,6 +5031,11 @@ std::string t_java_generator::make_valid_java_identifier(std::string const& from
   }
 
   return normalize_name(str);
+}
+
+std::string t_java_generator::make_java_service_name_fix(std::string const& srvName) {
+    std::string fixedName = srvName + "Srv";
+    return fixedName;
 }
 
 std::string t_java_generator::as_camel_case(std::string name, bool ucfirst) {

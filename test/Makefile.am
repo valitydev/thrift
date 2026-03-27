@@ -79,7 +79,9 @@ endif
 
 if WITH_ERLANG
 SUBDIRS += erl
+SUBDIRS += erlang
 PRECROSS_TARGET += precross-erl
+PRECROSS_TARGET += precross-erlang
 endif
 
 if WITH_LUA
@@ -131,6 +133,8 @@ EXTRA_DIST = \
 	crossrunner \
 	dart \
 	erl \
+	erlang \
+	hs \
 	keys \
 	lua \
 	ocaml \

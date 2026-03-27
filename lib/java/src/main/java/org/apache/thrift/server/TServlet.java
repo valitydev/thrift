@@ -1,5 +1,10 @@
 package org.apache.thrift.server;
 
+import dev.vality.woody.api.interceptor.CommonInterceptor;
+import dev.vality.woody.api.interceptor.EmptyCommonInterceptor;
+import dev.vality.woody.api.trace.ContextUtils;
+import dev.vality.woody.api.trace.TraceData;
+import dev.vality.woody.api.trace.context.TraceContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,10 +12,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
@@ -28,6 +33,38 @@ public class TServlet extends HttpServlet {
 
   private final Collection<Map.Entry<String, String>> customHeaders;
 
+  private final CommonInterceptor defaultInterceptor =
+      new EmptyCommonInterceptor() {
+        @Override
+        public boolean interceptResponse(
+            TraceData traceData, Object providerContext, Object... contextParams) {
+          Throwable t = ContextUtils.getCallError(traceData.getServiceSpan());
+          if (t != null) {
+            ContextUtils.setInterceptionError(traceData.getServiceSpan(), t);
+            return false;
+          }
+          return true;
+        }
+      };
+
+  private CommonInterceptor interceptor;
+
+  /**
+   * @see HttpServlet#HttpServlet()
+   */
+  public TServlet(
+      TProcessor processor,
+      TProtocolFactory inProtocolFactory,
+      TProtocolFactory outProtocolFactory,
+      CommonInterceptor interceptor) {
+    super();
+    this.processor = processor;
+    this.inProtocolFactory = inProtocolFactory;
+    this.outProtocolFactory = outProtocolFactory;
+    this.customHeaders = new ArrayList<>();
+    this.interceptor = interceptor == null ? defaultInterceptor : interceptor;
+  }
+
   /**
    * @see HttpServlet#HttpServlet()
    */
@@ -35,11 +72,7 @@ public class TServlet extends HttpServlet {
       TProcessor processor,
       TProtocolFactory inProtocolFactory,
       TProtocolFactory outProtocolFactory) {
-    super();
-    this.processor = processor;
-    this.inProtocolFactory = inProtocolFactory;
-    this.outProtocolFactory = outProtocolFactory;
-    this.customHeaders = new ArrayList<Map.Entry<String, String>>();
+    this(processor, inProtocolFactory, outProtocolFactory, null);
   }
 
   /**
@@ -49,6 +82,17 @@ public class TServlet extends HttpServlet {
     this(processor, protocolFactory, protocolFactory);
   }
 
+  public TServlet(
+      TProcessor processor, TProtocolFactory protocolFactory, CommonInterceptor interceptor) {
+    this(processor, protocolFactory, protocolFactory, interceptor);
+  }
+
+  @Override
+  protected void service(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    doPost(req, resp);
+  }
+
   /**
    * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
    */
@@ -56,31 +100,40 @@ public class TServlet extends HttpServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
-    TTransport inTransport = null;
-    TTransport outTransport = null;
-
+    TraceData traceData = TraceContext.getCurrentTraceData();
+    OutputStream out = null;
     try {
+      InputStream in = request.getInputStream();
+      out = response.getOutputStream();
       response.setContentType("application/x-thrift");
+      if (!interceptor.interceptRequest(traceData, request, response)) {
+        ContextUtils.tryThrowInterceptionError(traceData.getServiceSpan());
+      }
 
       if (null != this.customHeaders) {
         for (Map.Entry<String, String> header : this.customHeaders) {
           response.addHeader(header.getKey(), header.getValue());
         }
       }
-      InputStream in = request.getInputStream();
-      OutputStream out = response.getOutputStream();
 
       TTransport transport = new TIOStreamTransport(in, out);
-      inTransport = transport;
-      outTransport = transport;
 
-      TProtocol inProtocol = inProtocolFactory.getProtocol(inTransport);
-      TProtocol outProtocol = outProtocolFactory.getProtocol(outTransport);
+      TProtocol inProtocol = inProtocolFactory.getProtocol(transport);
+      TProtocol outProtocol = outProtocolFactory.getProtocol(transport);
 
       processor.process(inProtocol, outProtocol);
-      out.flush();
-    } catch (TException te) {
-      throw new ServletException(te);
+    } catch (Throwable te) {
+      ContextUtils.setCallError(traceData.getServiceSpan(), te);
+    } finally {
+      if (!interceptor.interceptResponse(traceData, response)) {
+        Throwable t = ContextUtils.getInterceptionError(traceData.getServiceSpan());
+        if (t != null) {
+          throw new ServletException(t);
+        }
+      }
+      if (out != null) {
+        out.flush();
+      }
     }
   }
 
@@ -94,23 +147,7 @@ public class TServlet extends HttpServlet {
   }
 
   public void addCustomHeader(final String key, final String value) {
-    this.customHeaders.add(
-        new Map.Entry<String, String>() {
-          @Override
-          public String getKey() {
-            return key;
-          }
-
-          @Override
-          public String getValue() {
-            return value;
-          }
-
-          @Override
-          public String setValue(String value) {
-            return null;
-          }
-        });
+    this.customHeaders.add(new AbstractMap.SimpleImmutableEntry(key, value));
   }
 
   public void setCustomHeaders(Collection<Map.Entry<String, String>> headers) {

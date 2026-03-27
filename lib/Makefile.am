@@ -47,6 +47,7 @@ endif
 
 if WITH_ERLANG
 SUBDIRS += erl
+SUBDIRS += erlang
 endif
 
 if WITH_RUBY

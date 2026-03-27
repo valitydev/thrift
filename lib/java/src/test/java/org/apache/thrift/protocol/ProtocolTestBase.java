@@ -44,8 +44,8 @@ import thrift.test.CompactProtoTestStruct;
 import thrift.test.HolyMoley;
 import thrift.test.Nesting;
 import thrift.test.OneOfEach;
-import thrift.test.Srv;
-import thrift.test.ThriftTest;
+import thrift.test.SrvSrv;
+import thrift.test.ThriftTestSrv;
 
 public abstract class ProtocolTestBase {
 
@@ -373,8 +373,8 @@ public abstract class ProtocolTestBase {
 
   @Test
   public void testServerRequest() throws Exception {
-    Srv.Iface handler =
-        new Srv.Iface() {
+    SrvSrv.Iface handler =
+        new SrvSrv.Iface() {
           public int Janky(int i32arg) throws TException {
             return i32arg * 2;
           }
@@ -400,14 +400,14 @@ public abstract class ProtocolTestBase {
           }
         };
 
-    Srv.Processor testProcessor = new Srv.Processor(handler);
+    SrvSrv.Processor testProcessor = new SrvSrv.Processor(handler);
 
     TMemoryBuffer clientOutTrans = new TMemoryBuffer(0);
     TProtocol clientOutProto = getFactory().getProtocol(clientOutTrans);
     TMemoryBuffer clientInTrans = new TMemoryBuffer(0);
     TProtocol clientInProto = getFactory().getProtocol(clientInTrans);
 
-    Srv.Client testClient = new Srv.Client(clientInProto, clientOutProto);
+    SrvSrv.Client testClient = new SrvSrv.Client(clientInProto, clientOutProto);
 
     testClient.send_Janky(1);
     // System.out.println(clientOutTrans.inspect());
@@ -546,8 +546,8 @@ public abstract class ProtocolTestBase {
   public void testReadCheckMaxMessageRequestForString() throws TException {
     TProtocol clientOutProto = initConfig(15);
     TProtocol clientInProto = initConfig(15);
-    ThriftTest.Client testClient = new ThriftTest.Client(clientInProto, clientOutProto);
-    ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+    ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(clientInProto, clientOutProto);
+    ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
     try {
       testClient.send_testString("test");
       testProcessor.process(clientOutProto, clientInProto);
@@ -562,8 +562,8 @@ public abstract class ProtocolTestBase {
   public void testReadCheckMaxMessageRequestForList() throws TException {
     TProtocol clientOutProto = initConfig(15);
     TProtocol clientInProto = initConfig(15);
-    ThriftTest.Client testClient = new ThriftTest.Client(clientInProto, clientOutProto);
-    ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+    ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(clientInProto, clientOutProto);
+    ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
     TTransportException e =
         assertThrows(
             TTransportException.class,
@@ -580,8 +580,8 @@ public abstract class ProtocolTestBase {
   public void testReadCheckMaxMessageRequestForMap() throws TException {
     TProtocol clientOutProto = initConfig(13);
     TProtocol clientInProto = initConfig(13);
-    ThriftTest.Client testClient = new ThriftTest.Client(clientInProto, clientOutProto);
-    ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+    ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(clientInProto, clientOutProto);
+    ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
     Map<String, String> thing = new HashMap<>();
     thing.put("key", "Thrift");
 
@@ -602,8 +602,8 @@ public abstract class ProtocolTestBase {
   public void testReadCheckMaxMessageRequestForSet() throws TException {
     TProtocol clientOutProto = initConfig(10);
     TProtocol clientInProto = initConfig(10);
-    ThriftTest.Client testClient = new ThriftTest.Client(clientInProto, clientOutProto);
-    ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+    ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(clientInProto, clientOutProto);
+    ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
     TTransportException e =
         assertThrows(
             TTransportException.class,

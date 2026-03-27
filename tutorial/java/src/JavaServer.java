@@ -36,12 +36,12 @@ public class JavaServer {
 
   public static CalculatorHandler handler;
 
-  public static Calculator.Processor processor;
+  public static CalculatorSrv.Processor processor;
 
   public static void main(String [] args) {
     try {
       handler = new CalculatorHandler();
-      processor = new Calculator.Processor(handler);
+      processor = new CalculatorSrv.Processor(handler);
 
       Runnable simple = new Runnable() {
         public void run() {
@@ -61,7 +61,7 @@ public class JavaServer {
     }
   }
 
-  public static void simple(Calculator.Processor processor) {
+  public static void simple(CalculatorSrv.Processor processor) {
     try {
       TServerTransport serverTransport = new TServerSocket(9090);
       TServer server = new TSimpleServer(new Args(serverTransport).processor(processor));
@@ -76,7 +76,7 @@ public class JavaServer {
     }
   }
 
-  public static void secure(Calculator.Processor processor) {
+  public static void secure(CalculatorSrv.Processor processor) {
     try {
       /*
        * Use TSSLTransportParameters to setup the required SSL parameters. In this example
