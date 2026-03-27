@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name          = 'Thrift'
-  s.version       = '0.20.0'
+  s.version       = '0.20.1'
   s.summary       = "Apache Thrift is a lightweight, language-independent software stack with an associated code generation mechanism for RPC."
   s.description   = <<-DESC
 The Apache Thrift scalable cross-language software framework for networked services development combines a software stack with a code generation engine to build services that work efficiently and seamlessly between many programming languages.
