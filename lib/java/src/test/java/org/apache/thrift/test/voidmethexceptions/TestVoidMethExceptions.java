@@ -46,7 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import thrift.test.voidmethexceptions.TAppService01;
+import thrift.test.voidmethexceptions.TAppService01Srv;
 import thrift.test.voidmethexceptions.TExampleException;
 
 public class TestVoidMethExceptions {
@@ -109,7 +109,7 @@ public class TestVoidMethExceptions {
         String expectedResult,
         Class<? extends Exception> expectedExceptionClass,
         String expectedExceptionMsg,
-        SyncCall<TAppService01.Iface, String, Boolean, String> call)
+        SyncCall<TAppService01Srv.Iface, String, Boolean, String> call)
         throws Exception {
       if (log.isInfoEnabled()) {
         log.info(
@@ -125,7 +125,8 @@ public class TestVoidMethExceptions {
           new TFramedTransport(
               new TSocket(new TConfiguration(), "localhost", serverPort, TIMEOUT_MILLIS))) {
         clientTransport.open();
-        TAppService01.Iface client = new TAppService01.Client(new TBinaryProtocol(clientTransport));
+        TAppService01Srv.Iface client =
+            new TAppService01Srv.Client(new TBinaryProtocol(clientTransport));
         if (throwException && expectedExceptionClass != null) {
           Exception ex =
               assertThrows(
@@ -152,7 +153,7 @@ public class TestVoidMethExceptions {
         T expectedResult,
         Class<? extends Exception> expectedExceptionClass,
         String expectedExceptionMsg,
-        AsyncCall<TAppService01.AsyncClient, String, Boolean, AsyncMethodCallback<T>> call)
+        AsyncCall<TAppService01Srv.AsyncClient, String, Boolean, AsyncMethodCallback<T>> call)
         throws Throwable {
       if (log.isInfoEnabled()) {
         log.info(
@@ -168,8 +169,8 @@ public class TestVoidMethExceptions {
           new TNonblockingSocket("localhost", serverPort, TIMEOUT_MILLIS)) {
         TAsyncClientManager asyncClientManager = new TAsyncClientManager();
         try {
-          TAppService01.AsyncClient asyncClient =
-              new TAppService01.AsyncClient(
+          TAppService01Srv.AsyncClient asyncClient =
+              new TAppService01Srv.AsyncClient(
                   new TBinaryProtocol.Factory(), asyncClientManager, clientTransportAsync);
           asyncClient.setTimeout(TIMEOUT_MILLIS);
 
@@ -237,7 +238,7 @@ public class TestVoidMethExceptions {
           "sent msg",
           null,
           null,
-          TAppService01.Iface::returnString);
+          TAppService01Srv.Iface::returnString);
     }
   }
 
@@ -308,7 +309,7 @@ public class TestVoidMethExceptions {
           null,
           TExampleException.class,
           "sent msg",
-          TAppService01.Iface::returnString);
+          TAppService01Srv.Iface::returnString);
     }
   }
 
@@ -382,7 +383,7 @@ public class TestVoidMethExceptions {
           "sent msg",
           null,
           null,
-          TAppService01.AsyncClient::returnString);
+          TAppService01Srv.AsyncClient::returnString);
     }
   }
 
@@ -397,7 +398,7 @@ public class TestVoidMethExceptions {
           null,
           null,
           null,
-          TAppService01.AsyncClient::returnVoidThrows);
+          TAppService01Srv.AsyncClient::returnVoidThrows);
     }
   }
 
@@ -413,7 +414,7 @@ public class TestVoidMethExceptions {
           null,
           null,
           null,
-          TAppService01.AsyncClient::returnVoidNoThrowsRuntimeException);
+          TAppService01Srv.AsyncClient::returnVoidNoThrowsRuntimeException);
     }
   }
 
@@ -429,7 +430,7 @@ public class TestVoidMethExceptions {
           null,
           null,
           null,
-          TAppService01.AsyncClient::returnVoidNoThrowsTApplicationException);
+          TAppService01Srv.AsyncClient::returnVoidNoThrowsTApplicationException);
     }
   }
 
@@ -444,7 +445,7 @@ public class TestVoidMethExceptions {
           null,
           TExampleException.class,
           "sent msg",
-          TAppService01.AsyncClient::returnString);
+          TAppService01Srv.AsyncClient::returnString);
     }
   }
 
@@ -459,7 +460,7 @@ public class TestVoidMethExceptions {
           null,
           TExampleException.class,
           "sent msg",
-          TAppService01.AsyncClient::returnVoidThrows);
+          TAppService01Srv.AsyncClient::returnVoidThrows);
     }
   }
 
@@ -478,7 +479,7 @@ public class TestVoidMethExceptions {
               ? "sent msg"
               : null, // sync server return "Internal error processing
           // returnVoidNoThrowsRuntimeException" message
-          TAppService01.AsyncClient::returnVoidNoThrowsRuntimeException);
+          TAppService01Srv.AsyncClient::returnVoidNoThrowsRuntimeException);
     }
   }
 
@@ -494,7 +495,7 @@ public class TestVoidMethExceptions {
           null,
           TApplicationException.class,
           "sent msg",
-          TAppService01.AsyncClient::returnVoidNoThrowsTApplicationException);
+          TAppService01Srv.AsyncClient::returnVoidNoThrowsTApplicationException);
     }
   }
 
@@ -548,7 +549,7 @@ public class TestVoidMethExceptions {
           null,
           null,
           null,
-          TAppService01.AsyncClient::onewayVoidNoThrows);
+          TAppService01Srv.AsyncClient::onewayVoidNoThrows);
     }
   }
 
@@ -564,7 +565,7 @@ public class TestVoidMethExceptions {
           null,
           null,
           null,
-          TAppService01.AsyncClient::onewayVoidNoThrows);
+          TAppService01Srv.AsyncClient::onewayVoidNoThrows);
     }
   }
 
@@ -572,12 +573,12 @@ public class TestVoidMethExceptions {
     SYNC_SERVER(
         () -> {
           ServiceSyncImp service = new ServiceSyncImp();
-          return Pair.of(new TAppService01.Processor<>(service), service);
+          return Pair.of(new TAppService01Srv.Processor<>(service), service);
         }),
     ASYNC_SERVER(
         () -> {
           ServiceAsyncImp service = new ServiceAsyncImp();
-          return Pair.of(new TAppService01.AsyncProcessor<>(service), service);
+          return Pair.of(new TAppService01Srv.AsyncProcessor<>(service), service);
         });
 
     final TProcessor processor;

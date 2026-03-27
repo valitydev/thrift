@@ -46,6 +46,7 @@ ext.junitVersion = property('junit.version')
 ext.mockitoVersion = property('mockito.version')
 ext.javaxAnnotationVersion = property('javax.annotation.version')
 ext.commonsLang3Version = property('commons-lang3.version')
+ext.woodyVersion = property('woody.version')
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -66,6 +67,7 @@ dependencies {
     implementation "jakarta.servlet:jakarta.servlet-api:${servletVersion}"
     implementation "jakarta.annotation:jakarta.annotation-api:${javaxAnnotationVersion}"
     implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
+    implementation "dev.vality.woody:woody-api:${woodyVersion}"
 
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"

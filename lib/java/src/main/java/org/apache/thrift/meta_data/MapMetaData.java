@@ -28,4 +28,12 @@ public class MapMetaData extends FieldValueMetaData {
     this.keyMetaData = kMetaData;
     this.valueMetaData = vMetaData;
   }
+
+  public FieldValueMetaData getKeyMetaData() {
+    return keyMetaData;
+  }
+
+  public FieldValueMetaData getValueMetaData() {
+    return valueMetaData;
+  }
 }

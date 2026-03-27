@@ -22,10 +22,10 @@ package org.apache.thrift.test.voidmethexceptions;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
-import thrift.test.voidmethexceptions.TAppService01;
+import thrift.test.voidmethexceptions.TAppService01Srv;
 import thrift.test.voidmethexceptions.TExampleException;
 
-public class ServiceAsyncImp extends ServiceBase implements TAppService01.AsyncIface {
+public class ServiceAsyncImp extends ServiceBase implements TAppService01Srv.AsyncIface {
 
   @Override
   public void returnString(

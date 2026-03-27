@@ -24,7 +24,7 @@ import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.ServerTestBase.TestHandler;
 import org.apache.thrift.server.TExtensibleServlet;
-import thrift.test.ThriftTest;
+import thrift.test.ThriftTestSrv;
 
 @SuppressWarnings("serial")
 public class TestServlet extends TExtensibleServlet {
@@ -45,7 +45,7 @@ public class TestServlet extends TExtensibleServlet {
   @Override
   protected TProcessor getProcessor() {
     TestHandler testHandler = new TestHandler();
-    ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+    ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
     return testProcessor;
   }
 }

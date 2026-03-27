@@ -28,7 +28,7 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TSocket;
 import org.junit.jupiter.api.Test;
-import thrift.test.ThriftTest;
+import thrift.test.ThriftTestSrv;
 
 public class TestThreadPoolServer {
 
@@ -63,7 +63,7 @@ public class TestThreadPoolServer {
     TThreadPoolServer.Args args =
         new TThreadPoolServer.Args(serverSocket)
             .protocolFactory(new TBinaryProtocol.Factory())
-            .processor(new ThriftTest.Processor<>(new ServerTestBase.TestHandler()));
+            .processor(new ThriftTestSrv.Processor<>(new ServerTestBase.TestHandler()));
     return new TThreadPoolServer(args);
   }
 }

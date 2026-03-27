@@ -28,4 +28,8 @@ public class StructMetaData extends FieldValueMetaData {
     super(type);
     this.structClass = sClass;
   }
+
+  public Class<? extends TBase> getStructClass() {
+    return structClass;
+  }
 }

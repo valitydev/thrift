@@ -31,7 +31,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.apache.thrift.transport.TTransportFactory;
 import org.apache.thrift.transport.layered.TFramedTransport;
 import org.junit.jupiter.api.Test;
-import thrift.test.ThriftTest;
+import thrift.test.ThriftTestSrv;
 
 public class TestNonblockingServer extends ServerTestBase {
 
@@ -100,7 +100,7 @@ public class TestNonblockingServer extends ServerTestBase {
   public void testCleanupAllSelectionKeys() throws Exception {
     for (TProtocolFactory protoFactory : getProtocols()) {
       TestHandler handler = new TestHandler();
-      ThriftTest.Processor processor = new ThriftTest.Processor(handler);
+      ThriftTestSrv.Processor processor = new ThriftTestSrv.Processor(handler);
 
       startServer(processor, protoFactory);
 
@@ -109,7 +109,7 @@ public class TestNonblockingServer extends ServerTestBase {
       TTransport transport = getClientTransport(socket);
 
       TProtocol protocol = protoFactory.getProtocol(transport);
-      ThriftTest.Client testClient = new ThriftTest.Client(protocol);
+      ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(protocol);
 
       open(transport);
 

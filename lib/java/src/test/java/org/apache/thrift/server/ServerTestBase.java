@@ -47,7 +47,7 @@ import org.apache.thrift.transport.layered.TFramedTransport.Factory;
 import org.junit.jupiter.api.Test;
 import thrift.test.Insanity;
 import thrift.test.Numberz;
-import thrift.test.ThriftTest;
+import thrift.test.ThriftTestSrv;
 import thrift.test.Xception;
 import thrift.test.Xception2;
 import thrift.test.Xtruct;
@@ -55,7 +55,7 @@ import thrift.test.Xtruct2;
 
 public abstract class ServerTestBase {
 
-  public static class TestHandler implements ThriftTest.Iface {
+  public static class TestHandler implements ThriftTestSrv.Iface {
 
     public TestHandler() {}
 
@@ -343,30 +343,30 @@ public abstract class ServerTestBase {
 
   public abstract TTransport getClientTransport(TTransport underlyingTransport) throws Exception;
 
-  private void testBool(ThriftTest.Client testClient) throws TException {
+  private void testBool(ThriftTestSrv.Client testClient) throws TException {
     boolean t = testClient.testBool(true);
     assertTrue(t);
     boolean f = testClient.testBool(false);
     assertFalse(f);
   }
 
-  private void testByte(ThriftTest.Client testClient) throws TException {
+  private void testByte(ThriftTestSrv.Client testClient) throws TException {
     byte i8 = testClient.testByte((byte) 1);
     assertEquals(1, i8);
   }
 
-  private void testUuid(ThriftTest.Client testClient) throws TException {
+  private void testUuid(ThriftTestSrv.Client testClient) throws TException {
     UUID uuid = UUID.fromString("00112233-4455-6677-8899-aabbccddeeff");
     UUID got = testClient.testUuid(uuid);
     assertEquals(uuid, got);
   }
 
-  private void testDouble(ThriftTest.Client testClient) throws TException {
+  private void testDouble(ThriftTestSrv.Client testClient) throws TException {
     double dub = testClient.testDouble(5.325098235);
     assertEquals(5.325098235, dub);
   }
 
-  private void testEnum(ThriftTest.Client testClient) throws TException {
+  private void testEnum(ThriftTestSrv.Client testClient) throws TException {
     assertEquals(Numberz.ONE, testClient.testEnum(Numberz.ONE));
     assertEquals(Numberz.TWO, testClient.testEnum(Numberz.TWO));
     assertEquals(Numberz.THREE, testClient.testEnum(Numberz.THREE));
@@ -374,18 +374,18 @@ public abstract class ServerTestBase {
     assertEquals(Numberz.EIGHT, testClient.testEnum(Numberz.EIGHT));
   }
 
-  private void testI32(ThriftTest.Client testClient) throws TException {
+  private void testI32(ThriftTestSrv.Client testClient) throws TException {
     int i32 = testClient.testI32(-1);
     assertEquals(i32, -1);
   }
 
-  private void testI64(ThriftTest.Client testClient) throws TException {
+  private void testI64(ThriftTestSrv.Client testClient) throws TException {
     long i64 = testClient.testI64(-34359738368L);
     assertEquals(i64, -34359738368L);
   }
 
   // todo: add assertions
-  private void testInsanity(ThriftTest.Client testClient) throws TException {
+  private void testInsanity(ThriftTestSrv.Client testClient) throws TException {
     Insanity insane;
 
     insane = new Insanity();
@@ -453,8 +453,8 @@ public abstract class ServerTestBase {
     for (TProtocolFactory protoFactory : getProtocols()) {
       TProcessor processor =
           useAsyncProcessor()
-              ? new ThriftTest.AsyncProcessor<>(new AsyncTestHandler())
-              : new ThriftTest.Processor<>(new TestHandler());
+              ? new ThriftTestSrv.AsyncProcessor<>(new AsyncTestHandler())
+              : new ThriftTestSrv.Processor<>(new TestHandler());
 
       startServer(processor, protoFactory);
 
@@ -463,7 +463,7 @@ public abstract class ServerTestBase {
       TTransport transport = getClientTransport(socket);
 
       TProtocol protocol = protoFactory.getProtocol(transport);
-      ThriftTest.Client testClient = new ThriftTest.Client(protocol);
+      ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(protocol);
 
       open(transport);
       testVoid(testClient);
@@ -502,7 +502,7 @@ public abstract class ServerTestBase {
     return PROTOCOLS;
   }
 
-  private void testList(ThriftTest.Client testClient) throws TException {
+  private void testList(ThriftTestSrv.Client testClient) throws TException {
     List<Integer> listout = new ArrayList<>();
     for (int i = -2; i < 3; ++i) {
       listout.add(i);
@@ -511,7 +511,7 @@ public abstract class ServerTestBase {
     assertEquals(listout, listin);
   }
 
-  private void testMap(ThriftTest.Client testClient) throws TException {
+  private void testMap(ThriftTestSrv.Client testClient) throws TException {
     Map<Integer, Integer> mapout = new HashMap<>();
     for (int i = 0; i < 5; ++i) {
       mapout.put(i, i - 10);
@@ -520,7 +520,7 @@ public abstract class ServerTestBase {
     assertEquals(mapout, mapin);
   }
 
-  private void testStringMap(ThriftTest.Client testClient) throws TException {
+  private void testStringMap(ThriftTestSrv.Client testClient) throws TException {
     Map<String, String> mapout = new HashMap<>();
     mapout.put("a", "123");
     mapout.put(" x y ", " with spaces ");
@@ -530,7 +530,7 @@ public abstract class ServerTestBase {
     assertEquals(mapout, mapin);
   }
 
-  private void testNestedMap(ThriftTest.Client testClient) throws TException {
+  private void testNestedMap(ThriftTestSrv.Client testClient) throws TException {
     Map<Integer, Map<Integer, Integer>> mm = testClient.testMapMap(1);
     Map<Integer, Map<Integer, Integer>> mapmap = new HashMap<>();
 
@@ -546,19 +546,19 @@ public abstract class ServerTestBase {
     assertEquals(mapmap, mm);
   }
 
-  private void testNestedStruct(ThriftTest.Client testClient) throws TException {
+  private void testNestedStruct(ThriftTestSrv.Client testClient) throws TException {
     Xtruct2 in2 = testClient.testNest(XSTRUCT2);
     assertEquals(XSTRUCT2, in2);
   }
 
-  private void testOneway(ThriftTest.Client testClient) throws Exception {
+  private void testOneway(ThriftTestSrv.Client testClient) throws Exception {
     long begin = System.currentTimeMillis();
     testClient.testOneway(1);
     long elapsed = System.currentTimeMillis() - begin;
     assertTrue(elapsed < 500);
   }
 
-  private void testSet(ThriftTest.Client testClient) throws TException {
+  private void testSet(ThriftTestSrv.Client testClient) throws TException {
     Set<Integer> setout = new HashSet<>();
     for (int i = -2; i < 3; ++i) {
       setout.add(i);
@@ -567,20 +567,20 @@ public abstract class ServerTestBase {
     assertEquals(setout, setin);
   }
 
-  private void testString(ThriftTest.Client testClient) throws TException {
+  private void testString(ThriftTestSrv.Client testClient) throws TException {
     String s = testClient.testString("Test");
     assertEquals("Test", s);
   }
 
-  private void testStruct(ThriftTest.Client testClient) throws TException {
+  private void testStruct(ThriftTestSrv.Client testClient) throws TException {
     assertEquals(XSTRUCT, testClient.testStruct(XSTRUCT));
   }
 
-  private void testTypedef(ThriftTest.Client testClient) throws TException {
+  private void testTypedef(ThriftTestSrv.Client testClient) throws TException {
     assertEquals(309858235082523L, testClient.testTypedef(309858235082523L));
   }
 
-  private void testVoid(ThriftTest.Client testClient) throws TException {
+  private void testVoid(ThriftTestSrv.Client testClient) throws TException {
     testClient.testVoid();
   }
 
@@ -603,7 +603,7 @@ public abstract class ServerTestBase {
   public void testTransportFactory() throws Exception {
     for (TProtocolFactory protoFactory : getProtocols()) {
       TestHandler handler = new TestHandler();
-      ThriftTest.Processor<TestHandler> processor = new ThriftTest.Processor<>(handler);
+      ThriftTestSrv.Processor<TestHandler> processor = new ThriftTestSrv.Processor<>(handler);
 
       final CallCountingTransportFactory factory =
           new CallCountingTransportFactory(new TFramedTransport.Factory());
@@ -617,7 +617,7 @@ public abstract class ServerTestBase {
       open(transport);
 
       TProtocol protocol = protoFactory.getProtocol(transport);
-      ThriftTest.Client testClient = new ThriftTest.Client(protocol);
+      ThriftTestSrv.Client testClient = new ThriftTestSrv.Client(protocol);
       assertEquals(0, testClient.testByte((byte) 0));
       assertEquals(2, factory.count);
       socket.close();
@@ -625,7 +625,7 @@ public abstract class ServerTestBase {
     }
   }
 
-  private void testException(ThriftTest.Client testClient) throws TException {
+  private void testException(ThriftTestSrv.Client testClient) throws TException {
     try {
       testClient.testException("Xception");
       assert false;
@@ -641,7 +641,7 @@ public abstract class ServerTestBase {
     testClient.testException("no Exception");
   }
 
-  public static class AsyncTestHandler implements ThriftTest.AsyncIface {
+  public static class AsyncTestHandler implements ThriftTestSrv.AsyncIface {
 
     TestHandler handler = new TestHandler();
 

@@ -41,8 +41,8 @@ import org.apache.thrift.transport.TTransportFactory;
 import org.apache.thrift.transport.TZlibTransport;
 import org.apache.thrift.transport.layered.TFastFramedTransport;
 import org.apache.thrift.transport.layered.TFramedTransport;
-import thrift.test.SecondService;
-import thrift.test.ThriftTest;
+import thrift.test.SecondServiceSrv;
+import thrift.test.ThriftTestSrv;
 
 public class TestServer {
 
@@ -56,7 +56,7 @@ public class TestServer {
   // the multiplexed processor is taught to use "ThriftTest" if the incoming request has no
   // multiplexed call name decoration.
 
-  static class SecondHandler implements thrift.test.SecondService.Iface {
+  static class SecondHandler implements thrift.test.SecondServiceSrv.Iface {
 
     @Override
     public java.lang.String secondtestString(java.lang.String thing)
@@ -239,10 +239,10 @@ public class TestServer {
 
       // Processors
       TestHandler testHandler = new TestHandler();
-      ThriftTest.Processor testProcessor = new ThriftTest.Processor(testHandler);
+      ThriftTestSrv.Processor testProcessor = new ThriftTestSrv.Processor(testHandler);
 
       SecondHandler secondHandler = new SecondHandler();
-      SecondService.Processor secondProcessor = new SecondService.Processor(secondHandler);
+      SecondServiceSrv.Processor secondProcessor = new SecondServiceSrv.Processor(secondHandler);
 
       // Protocol factory
       TProtocolFactory tProtocolFactory = null;

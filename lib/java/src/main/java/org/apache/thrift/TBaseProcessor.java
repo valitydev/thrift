@@ -1,9 +1,11 @@
 package org.apache.thrift;
 
+import static dev.vality.woody.api.trace.context.TraceContext.getCurrentTraceData;
+
+import dev.vality.woody.api.trace.MetadataProperties;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.thrift.protocol.TMessage;
-import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolUtil;
 import org.apache.thrift.protocol.TType;
@@ -26,17 +28,16 @@ public abstract class TBaseProcessor<I> implements TProcessor {
   @Override
   public void process(TProtocol in, TProtocol out) throws TException {
     TMessage msg = in.readMessageBegin();
+    getCurrentTraceData()
+        .getServiceSpan()
+        .getMetadata()
+        .putValue(MetadataProperties.CALL_NAME, msg.name);
     ProcessFunction fn = processMap.get(msg.name);
     if (fn == null) {
       TProtocolUtil.skip(in, TType.STRUCT);
       in.readMessageEnd();
-      TApplicationException x =
-          new TApplicationException(
-              TApplicationException.UNKNOWN_METHOD, "Invalid method name: '" + msg.name + "'");
-      out.writeMessageBegin(new TMessage(msg.name, TMessageType.EXCEPTION, msg.seqid));
-      x.write(out);
-      out.writeMessageEnd();
-      out.getTransport().flush();
+      throw new TApplicationException(
+          TApplicationException.UNKNOWN_METHOD, "Invalid method name: '" + msg.name + "'");
     } else {
       fn.process(msg.seqid, in, out, iface);
     }

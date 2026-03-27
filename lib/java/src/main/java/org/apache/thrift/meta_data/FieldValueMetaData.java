@@ -49,6 +49,10 @@ public class FieldValueMetaData implements java.io.Serializable {
     this.isBinary = false;
   }
 
+  public int getType() {
+    return type;
+  }
+
   public boolean isTypedef() {
     return isTypedefType;
   }
